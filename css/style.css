@@ -234,9 +234,9 @@ em.g{font-style:normal;color:var(--green-2)} em.o{font-style:normal;color:var(--
 .btn-submit:disabled{opacity:.7;cursor:not-allowed;animation:none}
 .spin{display:none;width:18px;height:18px;border:3px solid rgba(0,0,0,.25);border-top-color:#000;border-radius:50%;animation:sp .7s linear infinite}
 .btn-submit.loading .spin{display:inline-block} @keyframes sp{to{transform:rotate(360deg)}}
-.form-msg{display:none;margin-top:14px;padding:12px 14px;border-radius:12px;font-size:.97rem}
-.form-msg.show{display:block;animation:pop .3s} .form-msg.ok{background:#e6f7ec;color:#0b5a2b;border:1px solid #9ad7b0}
-.form-msg.fail{background:#fdeaea;color:#8a1010;border:1px solid #f0a8a8}
+.form-msg{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;font-size:1rem;line-height:1.55}
+.form-msg.show{display:block;animation:pop .3s} .form-msg.ok{background:#e6f7ec;color:#0b5a2b;border:1.5px solid #9ad7b0;font-weight:600}
+.form-msg.fail{background:#fdf2e9;color:#9c2a0c;border:1.5px solid #f5b796;font-weight:600;box-shadow:0 4px 14px rgba(156,42,12,.1)}
 
 /* ===== 13 footer ===== */
 .s-footer{background:var(--brown);color:#e8dcc6;text-align:center;padding:18px 14px 90px;font-size:.95rem}

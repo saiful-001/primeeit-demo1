@@ -790,6 +790,22 @@
     var v = validate();
     if (!v) return;
 
+    // ফ্রড এলার্ট ও ডুপ্লিকেট স্প্যাম প্রটেকশন (একই নাম্বার দিয়ে বারবার অর্ডার আটকানো)
+    var FRAUD_COOLDOWN_MS = 15 * 60 * 1000; // ১৫ মিনিট কুলডাউন
+    var lastOrderRaw = localStorage.getItem("honey_last_order");
+    if (lastOrderRaw) {
+      try {
+        var lastOrder = JSON.parse(lastOrderRaw);
+        var timePassed = Date.now() - (lastOrder.time || 0);
+        if (lastOrder.phone === v.phone && timePassed < FRAUD_COOLDOWN_MS) {
+          var minsLeft = Math.ceil((FRAUD_COOLDOWN_MS - timePassed) / 60000);
+          showMsg("fail", "⚠️ ফ্রড এলার্ট (Fraud Alert): আপনি এই মোবাইল নাম্বার দিয়ে কিছুক্ষণ আগেই একটি অর্ডার সম্পন্ন করেছেন (অর্ডার আইডি: " + (lastOrder.orderId || "") + ")। আপনার অর্ডারটি ইতোমধ্যে সফলভাবে গ্রহণ করা হয়েছে। বারবার অর্ডার পাঠানোর প্রয়োজন নেই। অর্ডারে কোনো পরিবর্তন করতে চাইলে সরাসরি আমাদের নম্বরে কল করুন। (" + bn(minsLeft) + " মিনিট পর পুনরায় নতুন অর্ডার করা যাবে)");
+          $("#checkout").scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+      } catch (err) {}
+    }
+
     if (!C.apiEndpoint) {
       showMsg("fail", "অর্ডার সিস্টেম এখনও কনফিগার করা হয়নি। js/config.js এ আপনার Google Apps Script এর apiEndpoint লিংক যুক্ত করুন। (README দেখুন)");
       return;
@@ -823,6 +839,15 @@
       .then(function (d) {
         if (d && d.success) {
           showMsg("ok", "ধন্যবাদ! আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে। আপনার অর্ডার আইডি: " + d.orderId + " | সর্বমোট বিল: " + money(d.total) + "। আমরা অতি দ্রুত আপনার সাথে যোগাযোগ করব।");
+          
+          try {
+            localStorage.setItem("honey_last_order", JSON.stringify({
+              phone: v.phone,
+              orderId: d.orderId,
+              time: Date.now()
+            }));
+          } catch (e) {}
+
           form.reset();
           state.items = {};
           if (defProd) state.items[defProd] = 1;
@@ -836,7 +861,8 @@
           $("#submitLabel").textContent = "অর্ডার কনফার্ম করুন";
         } else {
           busy(false);
-          showMsg("fail", (d && d.error) ? d.error : "অর্ডার সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন অথবা ফোনে যোগাযোগ করুন।");
+          var errMsg = (d && d.error) ? d.error : "অর্ডার সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন অথবা ফোনে যোগাযোগ করুন।";
+          showMsg("fail", errMsg);
         }
       })
       .catch(function () {

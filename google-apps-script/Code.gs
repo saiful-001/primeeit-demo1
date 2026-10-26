@@ -92,24 +92,7 @@ var PRODUCTS_CONFIG = {
 
 
 /* =========================================================================
-   ৩. ডিসকাউন্ট ও অফার সেটিংস (DISCOUNT & OFFERS)
-   ========================================================================= */
-var DISCOUNT_CONFIG = {
-
-  // ডিসকাউন্ট চালু রাখতে চান? (অফার ডিসকাউন্ট বন্ধ রাখতে false রাখা হয়েছে)
-  enabled: false,
-
-  // ডিসকাউন্টের ধরন:
-  type: "FLAT",
-  amount: 0,
-  minOrderAmount: 0,
-  multiItemBonusDiscount: 0
-
-};
-
-
-/* =========================================================================
-   ৪. ডেলিভারি চার্জ সেটিংস (SHIPPING / DELIVERY CHARGES)
+   ৩. ডেলিভারি চার্জ সেটিংস (SHIPPING / DELIVERY CHARGES)
    ========================================================================= */
 var SHIPPING_CONFIG = {
   "dhaka": {
@@ -131,8 +114,25 @@ var MAX_QTY_PER_ITEM = 20;
 
 
 /* =========================================================================
+   ৪. ফ্রড এলার্ট ও স্প্যাম প্রতিরোধ সেটিংস (FRAUD & SPAM PROTECTION)
+   =========================================================================
+   - কোনো অসৎ কাস্টমার বা বট যাতে একই মোবাইল নাম্বার দিয়ে বারবার অর্ডার পাঠিয়ে
+     শিট জ্যাম বা স্প্যাম না করতে পারে, সেজন্য এই ফ্রড প্রটেকশন।
+   - একবার অর্ডার সফল হওয়ার পর নির্দিষ্ট সময়ের মধ্যে আবার একই নাম্বার দিয়ে অর্ডার করলে
+     সিস্টেম অর্ডার আটকে দিবে এবং তাকে ফ্রড এলার্ট মেসেজ দেখাবে।
+*/
+var FRAUD_PROTECTION = {
+  enabled: true,                // ফ্রড প্রটেকশন চালু রাখতে true, বন্ধ করতে false
+  cooldownMinutes: 15           // কত মিনিট পর একই নাম্বার দিয়ে পুনরায় অর্ডার করা যাবে (ডিফল্ট: ১৫ মিনিট)
+};
+
+
+/* =========================================================================
    ৫. গুগল শিটের কলাম হেডার (SHEET TABLE HEADERS)
-   ========================================================================= */
+   =========================================================================
+   - "Discount Amount" কলামটি বাদ দেওয়া হয়েছে।
+   - "Products Subtotal" এর সাথে ডেলিভারি চার্জ যোগ হয়ে সরাসরি "Grand Total Bill" হবে।
+*/
 var HEADERS = [
   "Order ID",              // অর্ডার নম্বর (যেমন: HN-261026-0001)
   "Date & Time",           // অর্ডার করার তারিখ ও সময়
@@ -143,10 +143,9 @@ var HEADERS = [
   "Ordered Products",      // কি কি পণ্য অর্ডার করেছে এবং কত পিস (বিস্তারিত)
   "Total Items (Qty)",     // সর্বমোট পণ্যের সংখ্যা
   "Products Subtotal",     // পণ্যের মোট দাম (টাকায়)
-  "Discount Amount",       // ডিসকাউন্ট ছাড় (টাকায়)
   "Delivery Method",       // ডেলিভারি এলাকা
   "Delivery Charge",       // ডেলিভারি চার্জ (টাকায়)
-  "Grand Total Bill",      // কাস্টমারের সর্বমোট বিল (টাকায়)
+  "Grand Total Bill",      // সর্বমোট বিল = Products Subtotal + Delivery Charge
   "Customer Note",         // কাস্টমারের বিশেষ নির্দেশনা
   "Order Status"           // অর্ডারের অবস্থা (New / Processing / Delivered)
 ];
@@ -168,6 +167,7 @@ function doGet() {
       connectedSpreadsheetUrl: ss.getUrl(),
       targetTabName: sheet.getName(),
       totalOrdersInSheet: Math.max(0, sheet.getLastRow() - 1),
+      fraudProtection: FRAUD_PROTECTION.enabled ? "চালু আছে (" + FRAUD_PROTECTION.cooldownMinutes + " মিনিট কুলডাউন)" : "বন্ধ",
       time: new Date().toISOString()
     });
   } catch (err) {
@@ -187,19 +187,36 @@ function doPost(e) {
     var rawData = (e && e.postData && e.postData.contents) || "{}";
     var data = JSON.parse(rawData);
 
-    // তথ্য যাচাইকরণ
+    // ১. তথ্য যাচাইকরণ
     var validationError = validateOrder_(data);
     if (validationError) {
       return json_({ success: false, error: validationError });
     }
 
-    // অর্ডারকৃত পণ্যের হিসাব নিকাশ (মাল্টিপল প্রোডাক্ট সাপোর্ট)
+    var cleanPhone = normPhone_(data.phone);
+
+    // ২. ফ্রড এলার্ট ও ডুপ্লিকেট স্প্যাম প্রটেকশন (Fraud Alert & Duplicate Guard)
+    if (FRAUD_PROTECTION && FRAUD_PROTECTION.enabled) {
+      var cache = CacheService.getScriptCache();
+      var cacheKey = "honey_guard_" + cleanPhone;
+      var existingOrderId = cache.get(cacheKey);
+
+      if (existingOrderId) {
+        return json_({
+          success: false,
+          fraudAlert: true,
+          error: "⚠️ ফ্রড এলার্ট (Fraud Alert): এই মোবাইল নাম্বার (" + cleanPhone + ") দিয়ে কিছুক্ষণ আগেই একটি অর্ডার (" + existingOrderId + ") গ্রহণ করা হয়েছে। আপনার অর্ডারটি প্রক্রিয়াধীন রয়েছে, বারবার অর্ডার পাঠানোর প্রয়োজন নেই। প্রয়োজনে সরাসরি আমাদের নাম্বারে কল করুন।"
+        });
+      }
+    }
+
+    // ৩. অর্ডারকৃত পণ্যের হিসাব নিকাশ (মাল্টিপল প্রোডাক্ট সাপোর্ট)
     var parsedItems = parseOrderedItems_(data);
     if (!parsedItems || parsedItems.length === 0) {
       return json_({ success: false, error: "অনুগ্রহ করে কমপক্ষে একটি পণ্য সিলেক্ট করুন।" });
     }
 
-    // পণ্যের দাম ও মোট সাব-টোটাল হিসাব
+    // ৪. পণ্যের দাম ও মোট সাব-টোটাল হিসাব
     var subtotal = 0;
     var totalQty = 0;
     var itemsSummaryList = [];
@@ -215,10 +232,7 @@ function doPost(e) {
 
     var itemsSummaryString = itemsSummaryList.join(",\n");
 
-    // ডিসকাউন্ট হিসাব
-    var discount = calculateDiscount_(subtotal, parsedItems.length);
-
-    // ডেলিভারি চার্জ হিসাব
+    // ৫. ডেলিভারি চার্জ হিসাব
     var shippingInfo = SHIPPING_CONFIG[data.shippingId] || SHIPPING_CONFIG["dhaka"];
     var shippingCharge = shippingInfo.charge;
 
@@ -227,10 +241,10 @@ function doPost(e) {
       shippingCharge = 0;
     }
 
-    // সর্বমোট বিল
-    var grandTotal = Math.max(0, subtotal - discount) + shippingCharge;
+    // ৬. সর্বমোট বিল গণনা: Products Subtotal এর সাথে Delivery Charge যোগফল
+    var grandTotal = subtotal + shippingCharge;
 
-    // গুগল শিটে অর্ডার সংরক্ষণ
+    // ৭. গুগল শিটে অর্ডার সংরক্ষণ (Discount Amount ছাড়া সরাসরি Subtotal + Delivery = Grand Total)
     var sheet = getSheet_();
     var orderId = nextOrderId_(sheet);
     var orderDate = Utilities.formatDate(new Date(), "Asia/Dhaka", "dd-MMM-yyyy hh:mm a");
@@ -239,28 +253,34 @@ function doPost(e) {
       orderId,                                          // Order ID
       orderDate,                                        // Date & Time
       clean_(data.name, 100),                           // Customer Name
-      "'" + normPhone_(data.phone),                     // Phone Number
-      clean_(data.district, 80),                        // District
-      clean_(data.address, 350),                        // Address
+      "'" + cleanPhone,                                 // Phone Number
+      clean_(data.district, 80),                        // District / Area
+      clean_(data.address, 350),                        // Full Address
       itemsSummaryString,                               // Ordered Products
-      totalQty,                                         // Total Items
-      subtotal,                                         // Subtotal
-      discount,                                         // Discount
+      totalQty,                                         // Total Items (Qty)
+      subtotal,                                         // Products Subtotal
       shippingInfo.label,                               // Delivery Method
       shippingCharge,                                   // Delivery Charge
-      grandTotal,                                       // Grand Total
+      grandTotal,                                       // Grand Total Bill (Products Subtotal + Delivery Charge)
       clean_(data.note || "কোনো নোট নেই", 300),         // Customer Note
       "New"                                             // Order Status
     ]);
 
     SpreadsheetApp.flush();
 
-    // কাস্টমারের কাছে রেসপন্স পাঠানো
+    // ৮. সফল অর্ডারের পর এই ফোন নাম্বারকে নির্দিষ্ট সময়ের জন্য ফ্রড গার্ড ক্যাশে রাখা
+    if (FRAUD_PROTECTION && FRAUD_PROTECTION.enabled) {
+      try {
+        var cooldownSec = Math.max(60, FRAUD_PROTECTION.cooldownMinutes * 60);
+        cache.put("honey_guard_" + cleanPhone, orderId, cooldownSec);
+      } catch (cacheErr) {}
+    }
+
+    // ৯. কাস্টমারের কাছে রেসপন্স পাঠানো
     return json_({
       success: true,
       orderId: orderId,
       subtotal: subtotal,
-      discount: discount,
       deliveryCharge: shippingCharge,
       total: grandTotal,
       itemsCount: totalQty,
@@ -275,32 +295,6 @@ function doPost(e) {
   } finally {
     try { lock.releaseLock(); } catch (x) {}
   }
-}
-
-/**
- * ডিসকাউন্ট হিসাব করার ফাংশন
- */
-function calculateDiscount_(subtotal, uniqueItemsCount) {
-  if (!DISCOUNT_CONFIG || !DISCOUNT_CONFIG.enabled) return 0;
-  
-  var discount = 0;
-  var minOrder = DISCOUNT_CONFIG.minOrderAmount || 0;
-
-  if (subtotal >= minOrder) {
-    if (DISCOUNT_CONFIG.type === "PERCENT") {
-      discount = Math.round((subtotal * (DISCOUNT_CONFIG.amount || 0)) / 100);
-    } else {
-      discount = DISCOUNT_CONFIG.amount || 0;
-    }
-
-    // একাধিক পণ্য কিনলে অতিরিক্ত বোনাস ডিসকাউন্ট
-    if (uniqueItemsCount > 1 && DISCOUNT_CONFIG.multiItemBonusDiscount > 0) {
-      discount += DISCOUNT_CONFIG.multiItemBonusDiscount;
-    }
-  }
-
-  // ডিসকাউন্ট যেন সাব-টোটালের চেয়ে বেশি না হয়ে যায়
-  return Math.min(discount, subtotal);
 }
 
 /**
@@ -416,19 +410,41 @@ function getSheet_() {
     sheet = ss.insertSheet(SHEET_NAME);
   }
 
-  // প্রথমবার হেডার সেট করা
+  // হেডার সেট করা বা পুরানো হেডার থাকলে স্বয়ংক্রিয়ভাবে আপডেট করা
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(HEADERS);
-    sheet.setFrozenRows(1);
-    
-    var headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
-    headerRange.setFontWeight("bold");
-    headerRange.setBackground("#0F5132"); // গাঢ় সবুজ
-    headerRange.setFontColor("#FFFFFF");  // সাদা লেখা
-    headerRange.setHorizontalAlignment("center");
+    formatHeaderRow_(sheet);
+  } else {
+    try {
+      var lastCol = Math.max(HEADERS.length, sheet.getLastColumn() || 1);
+      var firstRow = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      var hasDiscountHeader = false;
+      for (var c = 0; c < firstRow.length; c++) {
+        if (String(firstRow[c]).toLowerCase().indexOf("discount") > -1) {
+          hasDiscountHeader = true;
+          break;
+        }
+      }
+      if (hasDiscountHeader) {
+        sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+        formatHeaderRow_(sheet);
+      }
+    } catch (e) {}
   }
 
   return sheet;
+}
+
+/**
+ * হেডার রোর স্টাইল ফরম্যাটিং
+ */
+function formatHeaderRow_(sheet) {
+  sheet.setFrozenRows(1);
+  var headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
+  headerRange.setFontWeight("bold");
+  headerRange.setBackground("#0F5132"); // গাঢ় সবুজ
+  headerRange.setFontColor("#FFFFFF");  // সাদা লেখা
+  headerRange.setHorizontalAlignment("center");
 }
 
 /**
