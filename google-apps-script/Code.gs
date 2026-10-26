@@ -10,21 +10,22 @@
  * কোডের কোনো জটিল অংশে হাত দেওয়ার প্রয়োজন নেই, শুধু নিচের সেটিংসগুলো আপনার প্রয়োজনমতো পরিবর্তন করুন।
  * 
  * 🚀 কীভাবে গুগল শিটের সাথে যুক্ত করবেন (Step-by-step Setup):
- * ১. একটি নতুন Google Sheet খুলুন।
- * ২. উপরের মেনু থেকে: Extensions ➔ Apps Script এ যান।
- * ৩. আগের সব কোড মুছে দিয়ে এই ফাইলের সম্পূর্ণ কোডটি পেস্ট করুন।
- * ৪. নিচে আপনার পণ্যের দাম ও ডিসকাউন্ট ঠিকমতো সেট করুন।
- * ৫. উপরের ডানপাশে "Deploy" ➔ "New deployment" বাটনে ক্লিক করুন।
- * ৬. গিয়ার আইকন (⚙️) থেকে "Web app" সিলেক্ট করুন।
- *    - Description: "Order API"
+ * ১. আপনার Google Sheet ওপেন করুন।
+ * ২. ব্রাউজারের অ্যাড্রেস বার থেকে শিটের সম্পূর্ণ লিংকটি কপি করুন (বা নিচের SPREADSHEET_ID তে দিন)।
+ * ৩. গুগল শিটের মেনু থেকে: Extensions ➔ Apps Script এ যান।
+ * ৪. আগের সব কোড মুছে দিয়ে এই ফাইলের সম্পূর্ণ কোডটি পেস্ট করুন।
+ * ৫. নিচের ১ নম্বর সেকশনে SPREADSHEET_ID তে আপনার গুগল শিটের সম্পূর্ণ লিংক বা আইডি দিন।
+ * ৬. উপরের ডানপাশে "Deploy" ➔ "New deployment" বাটনে ক্লিক করুন।
+ * ৭. গিয়ার আইকন (⚙️) থেকে "Web app" সিলেক্ট করুন:
+ *    - Description: "Honey Order API"
  *    - Execute as: "Me"
  *    - Who has access: "Anyone" (যাতে কাস্টমার ওয়েবসাইট থেকে অর্ডার করতে পারে)
- * ৭. "Deploy" বাটনে চাপুন এবং পারমিশন চাইলে "Authorize access" দিয়ে অনুমতি দিন।
- * ৮. শেষে একটি "Web app URL" পাবেন (যা /exec দিয়ে শেষ হয়)।
+ * ৮. "Deploy" বাটনে চাপুন এবং পারমিশন চাইলে "Authorize access" দিয়ে অনুমতি দিন।
+ * ৯. শেষে একটি "Web app URL" পাবেন (যা /exec দিয়ে শেষ হয়)।
  *    সেই লিংকটি কপি করে আপনার ওয়েবসাইটের `js/config.js` ফাইলের `apiEndpoint` এ বসিয়ে দিন।
  * 
  * ⚠️ মনে রাখবেন:
- * যখনই এই কোডে দাম বা কোনো সেটিং পরিবর্তন করবেন, তখন আবার Deploy ➔ Manage deployments
+ * যখনই এই কোডে কোনো পরিবর্তন করবেন, তখন আবার Deploy ➔ Manage deployments
  * ➔ Edit (পেন্সিল আইকন) ➔ Version: "New version" সিলেক্ট করে Deploy করতে হবে!
  * =========================================================================
  */
@@ -34,11 +35,13 @@
    ১. গুগল শিট সেটিংস (GOOGLE SHEET SETTINGS)
    ========================================================================= */
 
-// আপনি যদি গুগল শিটের ভিতর থেকেই Extensions ➔ Apps Script এ যান, তবে এটি ফাঁকা "" রাখলেই চলবে।
-// আর যদি আলাদা স্ক্রিপ্ট তৈরি করেন, তবে শিটের URL থেকে আইডিটি এখানে দিন (যেমন: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms")
-var SPREADSHEET_ID = "";
+// আপনার গুগল শিটের সম্পূর্ণ ব্রাউজার লিংক অথবা শুধু আইডিটি এখানে পেস্ট করুন:
+// উদাহরণ: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit"
+// (যদি আপনি গুগল শিটের ভেতর থেকেই Extensions ➔ Apps Script এ থাকেন তবে ফাঁকা "" রাখলেও চলবে, তবে নিশ্চিত হওয়ার জন্য শিটের লিংক দিয়ে রাখা সবচেয়ে নিরাপদ)
+var SPREADSHEET_ID = "https://docs.google.com/spreadsheets/d/1Zj6Zr-Zm4ypDHxR8O4l2lyJ3P3U3kty1_VNgfsDP20A/edit?gid=0#gid=0";
 
 // যে শিট/ট্যাবে অর্ডার জমা হবে সেটির নাম (ডিফল্ট: "Orders")
+// আপনার শিটে যদি Sheet1 থাকে, স্ক্রিপ্ট স্বয়ংক্রিয়ভাবে সেটিকে Orders বানিয়ে দিবে যাতে আপনার সামনেই ডেটা জমা হয়!
 var SHEET_NAME = "Orders";
 
 // টাকার প্রতীক
@@ -161,23 +164,34 @@ var HEADERS = [
 
 /* =========================================================================
    ৬. কোর ব্যাকএন্ড কোড (CORE BACKEND LOGIC)
-   ⚠️ নিচের কোডে সাধারণত হাত দেওয়ার প্রয়োজন নেই।
    ========================================================================= */
 
-// API চালু আছে কিনা টেস্ট করার জন্য (Browser-এ URL ওপেন করলে দেখাবে)
+// API টেস্ট করার ফাংশন (ব্রাউজারে /exec লিংক ওপেন করলে শিটের নাম ও লাইভ লিংক দেখতে পাবেন)
 function doGet() {
-  return json_({
-    success: true,
-    message: "খাঁটি মধু ও হানি নাট অর্ডার API সফলভাবে চালু রয়েছে!",
-    time: new Date().toISOString()
-  });
+  try {
+    var sheet = getSheet_();
+    var ss = sheet.getParent();
+    return json_({
+      success: true,
+      message: "খাঁটি মধু ও হানি নাট অর্ডার API সফলভাবে চালু রয়েছে!",
+      connectedSpreadsheetName: ss.getName(),
+      connectedSpreadsheetUrl: ss.getUrl(),
+      targetTabName: sheet.getName(),
+      totalOrdersInSheet: Math.max(0, sheet.getLastRow() - 1),
+      time: new Date().toISOString()
+    });
+  } catch (err) {
+    return json_({
+      success: false,
+      error: "গুগল শিটের সাথে সংযোগে সমস্যা: " + err.message
+    });
+  }
 }
 
 // ওয়েবসাইট থেকে অর্ডার সাবমিট গ্রহণ করার ফাংশন
 function doPost(e) {
   var lock = LockService.getScriptLock();
   try {
-    // একই সাথে একাধিক অর্ডার আসলে যাতে এলোমেলো না হয় সেজন্য ২০ সেকেন্ড লক অপেক্ষা
     lock.waitLock(20000);
 
     var rawData = (e && e.postData && e.postData.contents) || "{}";
@@ -266,7 +280,7 @@ function doPost(e) {
   } catch (err) {
     return json_({
       success: false,
-      error: "সার্ভারে সাময়িক সমস্যা হয়েছে। অনুগ্রহ করে সরাসরি আমাদের নম্বরে কল করুন।"
+      error: "সার্ভারে সাময়িক সমস্যা হয়েছে: " + err.message
     });
   } finally {
     try { lock.releaseLock(); } catch (x) {}
@@ -300,12 +314,12 @@ function calculateDiscount_(subtotal, uniqueItemsCount) {
 }
 
 /**
- * রিকোয়েস্ট থেকে অর্ডারকৃত পণ্যের তালিকা পার্স করা (মাল্টিপল এবং সিঙ্গেল দুটোই সাপোর্ট করবে)
+ * রিকোয়েস্ট থেকে অর্ডারকৃত পণ্যের তালিকা পার্স করা
  */
 function parseOrderedItems_(d) {
   var items = [];
 
-  // পদ্ধতি ১: মাল্টিপল প্রোডাক্ট অ্যারে (items: [ { id: "m1000", qty: 1 }, ... ])
+  // পদ্ধতি ১: মাল্টিপল প্রোডাক্ট অ্যারে
   if (Array.isArray(d.items) && d.items.length > 0) {
     for (var i = 0; i < d.items.length; i++) {
       var it = d.items[i];
@@ -318,7 +332,7 @@ function parseOrderedItems_(d) {
     }
   }
 
-  // পদ্ধতি ২: ব্যাকওয়ার্ড কম্প্যাটিবিলিটি (packageId ও quantity)
+  // পদ্ধতি ২: ব্যাকওয়ার্ড কম্প্যাটিবিলিটি (packageId)
   if (items.length === 0 && d.packageId && PRODUCTS_CONFIG[d.packageId]) {
     var qty = parseInt(d.quantity, 10);
     if (!isNaN(qty) && qty > 0) {
@@ -349,39 +363,74 @@ function validateOrder_(d) {
 }
 
 /**
- * ফোন নাম্বার থেকে স্পেস ও কান্ট্রি কোড মুছে ১১ ডিজিট করা
+ * ফোন নাম্বার নরমালাইজ করা
  */
 function normPhone_(v) {
   var s = String(v || "").replace(/[\s\-()]/g, "");
-  // বাংলা সংখ্যাকে ইংরেজি সংখ্যায় রূপান্তর
   s = s.replace(/[০-৯]/g, function (d) { return "০১২৩৪৫৬৭৮৯".indexOf(d); });
   s = s.replace(/^\+?88/, "");
   return s;
 }
 
 /**
- * স্প্রেডশীট ফর্মুলা ইনজেকশন প্রতিরোধ ও অতিরিক্ত লেখা ছাঁটাই
+ * স্প্রেডশীট ফর্মুলা ইনজেকশন প্রতিরোধ
  */
 function clean_(v, maxLen) {
   var s = String(v == null ? "" : v).replace(/[\u0000-\u001f]+/g, " ").trim();
   if (maxLen && s.length > maxLen) s = s.substring(0, maxLen);
-  // ফর্মুলা প্রতিরোধ
   return /^[=+\-@]/.test(s) ? "'" + s : s;
 }
 
 /**
- * গুগল শিট রিটার্ন করা (না থাকলে স্বয়ংক্রিয়ভাবে তৈরি ও সুন্দর ফরম্যাট করা)
+ * গুগল শিট কানেক্ট করা (স্মার্ট ডিটেকশন ও অটো-ট্যাব ফরম্যাটিং)
  */
 function getSheet_() {
-  var ss = SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
+  var ss;
+  var rawId = String(SPREADSHEET_ID || "").trim();
+
+  // যদি ব্যবহারকারী সম্পূর্ণ URL পেস্ট করে, তা থেকে স্বয়ংক্রিয়ভাবে আইডি আলাদা করা
+  if (rawId.length > 0) {
+    var urlMatch = rawId.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    var cleanId = urlMatch ? urlMatch[1] : rawId;
+    try {
+      ss = SpreadsheetApp.openById(cleanId);
+    } catch (e) {
+      throw new Error("SPREADSHEET_ID ভুল বা অনুমতি নেই। গুগল শিটের আইডি বা সঠিক লিংক দিন। (" + e.message + ")");
+    }
+  } else {
+    ss = SpreadsheetApp.getActiveSpreadsheet();
+  }
+
+  if (!ss) {
+    throw new Error("কোনো গুগল শিট খুঁজে পাওয়া যায়নি। অনুগ্রহ করে Code.gs ফাইলের SPREADSHEET_ID-তে আপনার গুগল শিটের লিংকটি দিন।");
+  }
+
+  // ১. নির্দিষ্ট নামের ট্যাব খোঁজা
+  var sheet = ss.getSheetByName(SHEET_NAME);
+
+  // ২. যদি সেই নামের ট্যাব না থাকে, তবে প্রথম ট্যাবটিকে চেক করবে
+  if (!sheet) {
+    var allSheets = ss.getSheets();
+    if (allSheets.length > 0) {
+      var firstSheet = allSheets[0];
+      // যদি প্রথম ট্যাবটি ফাঁকা থাকে তবে সেটিকে রিনেম করে Orders করবে
+      if (firstSheet.getLastRow() <= 1) {
+        firstSheet.setName(SHEET_NAME);
+        sheet = firstSheet;
+      }
+    }
+  }
+
+  // ৩. যদি তাও না পাওয়া যায় তবে নতুন ট্যাব তৈরি করবে
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+  }
 
   // প্রথমবার হেডার সেট করা
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(HEADERS);
     sheet.setFrozenRows(1);
     
-    // হেডার স্টাইল (বোল্ড, ব্যাকগ্রাউন্ড কালার, টেক্সট কালার)
     var headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
     headerRange.setFontWeight("bold");
     headerRange.setBackground("#0F5132"); // গাঢ় সবুজ
@@ -414,13 +463,7 @@ function json_(obj) {
 }
 
 /**
- * =========================================================================
- * 🧪 টেস্ট ফাংশন (TEST FUNCTION)
- * =========================================================================
- * শিট কাজ করছে কিনা টেস্ট করার জন্য:
- * ১. Apps Script এর উপরে রান মেনু থেকে "testOrder" সিলেক্ট করুন।
- * ২. "Run" বাটনে ক্লিক করুন।
- * ৩. আপনার গুগল শিটে একটি টেস্ট অর্ডার যুক্ত হবে!
+ * টেস্ট ফাংশন (Apps Script থেকে সরাসরি রান করতে পারেন)
  */
 function testOrder() {
   var fakeEvent = {

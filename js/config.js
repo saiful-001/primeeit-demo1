@@ -6,7 +6,7 @@
 window.SITE_CONFIG = {
 
   // আপনার Google Apps Script Web App URL টি এখানে পেস্ট করুন (যা /exec দিয়ে শেষ হয়)
-  apiEndpoint: "",
+  apiEndpoint: "https://script.google.com/macros/s/AKfycby3qTjUih_scnIbOhlHunXzlusXi6wNF2thMydPg85V7KnPB8QbEpr1QQ7oYQsQUrmn/exec",
 
   // ভিডিওর লিংক: ইউটিউব লিংক বা .mp4 ফাইলের লিংক (যেমন: "assets/videos/video.mp4")
   videoUrl: "assets/videos/hero-video.mp4",
