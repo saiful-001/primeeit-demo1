@@ -15,6 +15,74 @@
   // [[text]] -> emphasised span
   var mark = function (s, cls) { return esc(s).replace(/\[\[(.+?)\]\]/g, '<em class="' + cls + '">$1</em>'); };
 
+  /* ---------- বাংলাদেশ এর ৬৪ জেলার তালিকা (বাংলা ও ইংরেজি নাম) ---------- */
+  var DISTRICTS = [
+    { bn: "ঢাকা", en: "Dhaka" },
+    { bn: "চট্টগ্রাম", en: "Chattogram Chittagong" },
+    { bn: "রাজশাহী", en: "Rajshahi" },
+    { bn: "খুলনা", en: "Khulna" },
+    { bn: "বরিশাল", en: "Barishal Barisal" },
+    { bn: "সিলেট", en: "Sylhet" },
+    { bn: "রংপুর", en: "Rangpur" },
+    { bn: "ময়মনসিংহ", en: "Mymensingh" },
+    { bn: "গাজীপুর", en: "Gazipur" },
+    { bn: "নারায়ণগঞ্জ", en: "Narayanganj" },
+    { bn: "কুমিল্লা", en: "Cumilla Comilla" },
+    { bn: "বগুড়া", en: "Bogura Bogra" },
+    { bn: "কক্সবাজার", en: "Cox's Bazar Coxsbazar" },
+    { bn: "যশোর", en: "Jashore Jessore" },
+    { bn: "দিনাজপুর", en: "Dinajpur" },
+    { bn: "পাবনা", en: "Pabna" },
+    { bn: "টাঙ্গাইল", en: "Tangail" },
+    { bn: "ফরিদপুর", en: "Faridpur" },
+    { bn: "নরসিংদী", en: "Narsingdi" },
+    { bn: "কিশোরগঞ্জ", en: "Kishoreganj" },
+    { bn: "ব্রাহ্মণবাড়িয়া", en: "Brahmanbaria" },
+    { bn: "নোয়াখালী", en: "Noakhali" },
+    { bn: "ফেনী", en: "Feni" },
+    { bn: "চাঁদপুর", en: "Chandpur" },
+    { bn: "লক্ষ্মীপুর", en: "Lakshmipur" },
+    { bn: "হবিগঞ্জ", en: "Habiganj" },
+    { bn: "মৌলভীবাজার", en: "Moulvibazar" },
+    { bn: "সুনামগঞ্জ", en: "Sunamganj" },
+    { bn: "কুষ্টিয়া", en: "Kushtia" },
+    { bn: "ঝিনাইদহ", en: "Jhenaidah" },
+    { bn: "সাতক্ষীরা", en: "Satkhira" },
+    { bn: "বাগেরহাট", en: "Bagerhat" },
+    { bn: "চুয়াডাঙ্গা", en: "Chuadanga" },
+    { bn: "মেহেরপুর", en: "Meherpur" },
+    { bn: "মাগুরা", en: "Magura" },
+    { bn: "নড়াইল", en: "Narail" },
+    { bn: "সিরাজগঞ্জ", en: "Sirajganj" },
+    { bn: "নওগাঁ", en: "Naogaon" },
+    { bn: "নাটোর", en: "Natore" },
+    { bn: "চাঁপাইনবাবগঞ্জ", en: "Chapai Nawabganj" },
+    { bn: "জয়পুরহাট", en: "Joypurhat" },
+    { bn: "পটুয়াখালী", en: "Patuakhali" },
+    { bn: "ভোলা", en: "Bhola" },
+    { bn: "পিরোজপুর", en: "Pirojpur" },
+    { bn: "বরগুনা", en: "Barguna" },
+    { bn: "ঝালকাঠি", en: "Jhalakathi" },
+    { bn: "জামালপুর", en: "Jamalpur" },
+    { bn: "নেত্রকোণা", en: "Netrokona" },
+    { bn: "শেরপুর", en: "Sherpur" },
+    { bn: "গাইবান্ধা", en: "Gaibandha" },
+    { bn: "কুড়িগ্রাম", en: "Kurigram" },
+    { bn: "লালমনিরহাট", en: "Lalmonirhat" },
+    { bn: "নীলফামারী", en: "Nilphamari" },
+    { bn: "পঞ্চগড়", en: "Panchagarh" },
+    { bn: "ঠাকুরগাঁও", en: "Thakurgaon" },
+    { bn: "মানিকগঞ্জ", en: "Manikganj" },
+    { bn: "মুন্সীগঞ্জ", en: "Munshiganj" },
+    { bn: "গোপালগঞ্জ", en: "Gopalganj" },
+    { bn: "মাদারীপুর", en: "Madaripur" },
+    { bn: "শরীয়তপুর", en: "Shariatpur" },
+    { bn: "রাজবাড়ী", en: "Rajbari" },
+    { bn: "রাঙ্গামাটি", en: "Rangamati" },
+    { bn: "বান্দরবান", en: "Bandarban" },
+    { bn: "খাগড়াছড়ি", en: "Khagrachhari" }
+  ];
+
   /* ---------- placeholder images ---------- */
   function ph(label, w, h) {
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '"><rect width="100%" height="100%" fill="#d9d9d9"/><text x="50%" y="50%" fill="#777" font-family="sans-serif" font-size="' + Math.round(w / 14) + '" text-anchor="middle" dominant-baseline="middle">' + label + '</text></svg>';
@@ -81,7 +149,6 @@
       var videoId = yt ? yt[1] : "";
       var embedUrl = videoId ? "https://www.youtube-nocookie.com/embed/" + videoId : u;
 
-      // প্রি-লোডেড থাম্বনেইল পোস্টার যাতে ০ সেকেন্ড ব্ল্যাক স্ক্রিন থাকে
       if (videoId) {
         box.style.background = "#000 url('https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg') center/cover no-repeat";
       }
@@ -110,7 +177,6 @@
       }
 
       soundBtn.onclick = function (e) { e.stopPropagation(); unmuteYt(); };
-      // স্ক্রিনে প্রথম স্পর্শ বা ক্লিকে স্বয়ংক্রিয়ভাবে সাউন্ড চালু
       window.addEventListener("click", function () { unmuteYt(); }, { once: true });
       window.addEventListener("touchstart", function () { unmuteYt(); }, { once: true });
       window.addEventListener("scroll", function () { unmuteYt(); }, { once: true });
@@ -182,7 +248,7 @@
   var pkgBox = $("#packages"), shipBox = $("#shipping"), sumListEl = $("#sumItemsList");
   var ship = function () { return C.shipping.filter(function (s) { return s.id === state.sid; })[0]; };
 
-  // পণ্যসমূহ রেন্ডার করা (বামপাশের কার্ড)
+  // পণ্যসমূহ রেন্ডার করা (বামপাশের প্যাকেজ কার্ড)
   C.products.forEach(function (p) {
     var card = document.createElement("div");
     card.className = "pkg";
@@ -255,7 +321,6 @@
       return;
     }
 
-    // কার্ডে ক্লিক করলে টগল হবে
     if (state.items[pid]) {
       delete state.items[pid];
     } else {
@@ -307,7 +372,7 @@
     }
   });
 
-  // অর্ডার বিল ও সারাংশ হিসাব নিকাশ
+  // অর্ডার বিল ও সারাংশ হিসাব নিকাশ (ডিসকাউন্ট বাদ দিয়ে নিখুঁত হিসাব)
   function calc() {
     var s = ship();
     var selectedList = [];
@@ -341,52 +406,44 @@
       i.checked = i.value === state.sid;
     });
 
-    // ডানপাশের "আপনার অর্ডার" কার্ট রেন্ডার (+/- বাটন ও প্রতিটি পণ্যের দাম সহ)
+    // ডানপাশের "আপনার অর্ডার" কার্ট রেন্ডার (আসল দাম, ডিসকাউন্ট মূল্য ও +/- বাটন)
     if (sumListEl) {
       if (selectedList.length === 0) {
-        sumListEl.innerHTML = '<div class="sum-row empty-notice"><span>⚠️ কোনো পণ্য সিলেক্ট করা হয়নি (কমপক্ষে ১টি সিলেক্ট করুন)</span><span>' + money(0) + '</span></div>';
+        sumListEl.innerHTML = '<div class="sum-row empty-notice"><span>⚠️ কোনো পণ্য সিলেক্ট করা হয়নি (কমপক্ষে ১টি সিলেক্ট করুন)</span></div>';
       } else {
         sumListEl.innerHTML = selectedList.map(function (it) {
-          return '<div class="sum-cart-item" data-id="' + esc(it.product.id) + '">' +
+          var p = it.product;
+          var hasOld = p.oldPrice && p.oldPrice > p.price;
+          var saveAmount = hasOld ? (p.oldPrice - p.price) : 0;
+
+          var pricesHtml = '<div class="sci-prices">';
+          if (hasOld) {
+            pricesHtml += '<del class="sci-real-price">' + money(p.oldPrice) + '</del>';
+          }
+          pricesHtml += '<strong class="sci-sell-price">' + money(p.price) + '</strong>';
+          if (hasOld) {
+            pricesHtml += '<span class="sci-save">' + money(saveAmount) + ' ছাড়</span>';
+          }
+          pricesHtml += '</div>';
+
+          return '<div class="sum-cart-item" data-id="' + esc(p.id) + '">' +
             '<div class="sci-details">' +
-              '<span class="sci-name">' + esc(it.product.name) + '</span>' +
-              '<span class="sci-unit-price">প্রতিটি: ' + money(it.product.price) + '</span>' +
+              '<span class="sci-name">' + esc(p.name) + '</span>' +
+              pricesHtml +
             '</div>' +
             '<div class="sci-action">' +
               '<div class="sci-qty">' +
-                '<button type="button" class="sci-btn minus" data-id="' + esc(it.product.id) + '" aria-label="কমান">−</button>' +
+                '<button type="button" class="sci-btn minus" data-id="' + esc(p.id) + '" aria-label="কমান">−</button>' +
                 '<span class="sci-num">' + bn(it.qty) + '</span>' +
-                '<button type="button" class="sci-btn plus" data-id="' + esc(it.product.id) + '" aria-label="বাড়ান">+</button>' +
+                '<button type="button" class="sci-btn plus" data-id="' + esc(p.id) + '" aria-label="বাড়ান">+</button>' +
               '</div>' +
-              '<span class="sci-item-total">' + money(it.total) + '</span>' +
+              '<div class="sci-total-wrap">' +
+                '<span class="sci-total-label">মোট দাম:</span>' +
+                '<span class="sci-item-total">' + money(it.total) + '</span>' +
+              '</div>' +
             '</div>' +
           '</div>';
         }).join("");
-      }
-    }
-
-    // ডিসকাউন্ট হিসাব
-    var discount = 0;
-    var D = C.discount;
-    if (D && D.enabled && selectedList.length > 0 && subtotal >= (D.minOrderAmount || 0)) {
-      if (D.type === "PERCENT") {
-        discount = Math.round((subtotal * (D.amount || 0)) / 100);
-      } else {
-        discount = D.amount || 0;
-      }
-      if (selectedList.length > 1 && D.multiItemBonusDiscount) {
-        discount += D.multiItemBonusDiscount;
-      }
-      discount = Math.min(discount, subtotal);
-    }
-
-    var discRow = $("#sumDiscountRow");
-    if (discRow) {
-      if (discount > 0) {
-        discRow.style.display = "flex";
-        $("#sumDiscount").textContent = "− " + money(discount);
-      } else {
-        discRow.style.display = "none";
       }
     }
 
@@ -396,7 +453,8 @@
       shipCharge = 0;
     }
 
-    var grandTotal = Math.max(0, subtotal - discount) + (selectedList.length > 0 ? shipCharge : 0);
+    // অফার ডিসকাউন্ট বাদ দিয়ে সরাসরি সাব-টোটাল + শিপিং = সর্বমোট
+    var grandTotal = subtotal + (selectedList.length > 0 ? shipCharge : 0);
 
     $("#sumSub").textContent = money(subtotal);
     $("#sumShip").textContent = shipCharge === 0 && selectedList.length > 0 && C.freeShippingMinTotal > 0 ? "ফ্রি" : money(shipCharge);
@@ -404,7 +462,7 @@
 
     return {
       subtotal: subtotal,
-      discount: discount,
+      discount: 0,
       shipping: shipCharge,
       total: grandTotal,
       items: selectedList
@@ -412,6 +470,274 @@
   }
 
   calc();
+
+  /* ---------- বাংলাদেশ এর ৬৪ জেলার সার্চ ও ড্রপডাউন হ্যান্ডলার ---------- */
+  var distWrap = $("#distPickerWrap"),
+      distTrigger = $("#distTriggerBox"),
+      distInput = $("#district"),
+      distOpenBtn = $("#distOpenBtn"),
+      distBox = $("#distDropdown"),
+      distSearchInput = $("#distSearchInput"),
+      distClearBtn = $("#distClearBtn"),
+      distDoSearchBtn = $("#distDoSearchBtn"),
+      distCountText = $("#distCountText"),
+      distOptionsList = $("#distOptionsList"),
+      distCustomOption = $("#distCustomOption"),
+      distCustomVal = $("#distCustomVal"),
+      distUseCustomBtn = $("#distUseCustomBtn");
+
+  var activeDistIdx = -1;
+  var currentFilteredDistricts = DISTRICTS.slice();
+  var isTouchScrolling = false;
+
+  function selectDistrict(val) {
+    if (!val) return;
+    if (distInput) distInput.value = val;
+    closeDistDropdown();
+    setErr("district");
+  }
+
+  function renderDistrictOptions(list, selectedVal, isInitialOpen) {
+    if (!distOptionsList) return;
+    currentFilteredDistricts = list;
+    activeDistIdx = -1;
+
+    if (list.length === 0) {
+      distOptionsList.innerHTML = '<div class="dist-empty-notice">⚠️ "' + esc(distSearchInput.value) + '" নামে কোনো জেলা পাওয়া যায়নি।<br>নিচের বাটনে ক্লিক করে সরাসরি এই এলাকা হিসেবে ব্যবহার করুন।</div>';
+      return;
+    }
+
+    distOptionsList.innerHTML = list.map(function (d, i) {
+      var isSel = selectedVal && selectedVal.trim().toLowerCase() === d.bn.toLowerCase();
+      return '<div class="dist-option-item' + (isSel ? ' selected' : '') + '" data-val="' + esc(d.bn) + '" role="option" aria-selected="' + (isSel ? 'true' : 'false') + '">' +
+        '<div class="dist-opt-left">' +
+          '<span class="dist-opt-check">' + (isSel ? '✓' : '') + '</span>' +
+          '<span class="dist-opt-bn">' + esc(d.bn) + '</span>' +
+          '<span class="dist-opt-en">' + esc(d.en) + '</span>' +
+        '</div>' +
+        '<span class="dist-opt-tag">জেলা</span>' +
+      '</div>';
+    }).join("");
+
+    // শুধুমাত্র প্রথমবার ওপেন করার সময় নির্বাচিত জেলা থাকলে স্ক্রোল করা
+    if (isInitialOpen) {
+      var selEl = distOptionsList.querySelector(".dist-option-item.selected");
+      if (selEl) {
+        setTimeout(function () {
+          selEl.scrollIntoView({ block: "nearest" });
+        }, 50);
+      }
+    }
+  }
+
+  function normTxt(s) {
+    if (!s) return "";
+    var str = String(s);
+    if (str.normalize) str = str.normalize("NFC");
+    return str.toLowerCase().replace(/\u09BC/g, "");
+  }
+
+  function filterDistrictsList(isInitialOpen) {
+    var q = (distSearchInput ? distSearchInput.value : "").trim();
+    var curVal = distInput ? distInput.value : "";
+
+    if (distClearBtn) {
+      distClearBtn.style.display = q ? "flex" : "none";
+    }
+
+    if (!q) {
+      if (distCountText) distCountText.textContent = "মোট ৬৪টি জেলা";
+      if (distCustomOption) distCustomOption.style.display = "none";
+      renderDistrictOptions(DISTRICTS, curVal, isInitialOpen);
+      return;
+    }
+
+    var qNorm = normTxt(q);
+    var filtered = DISTRICTS.filter(function (d) {
+      return normTxt(d.bn).indexOf(qNorm) > -1 || normTxt(d.en).indexOf(qNorm) > -1;
+    });
+
+    if (distCountText) {
+      distCountText.textContent = filtered.length > 0 ? bn(filtered.length) + "টি জেলা পাওয়া গেছে" : "কোনো জেলা মেলেনি";
+    }
+
+    renderDistrictOptions(filtered, curVal, false);
+
+    if (distCustomOption && distCustomVal) {
+      distCustomVal.textContent = '"' + distSearchInput.value.trim() + '"';
+      distCustomOption.style.display = "block";
+    }
+  }
+
+  function openDistDropdown() {
+    if (!distBox) return;
+    distBox.classList.add("show");
+    if (distTrigger) {
+      distTrigger.classList.add("open");
+      distTrigger.setAttribute("aria-expanded", "true");
+    }
+    if (distSearchInput) {
+      distSearchInput.value = "";
+      if (distClearBtn) distClearBtn.style.display = "none";
+      setTimeout(function () {
+        distSearchInput.focus();
+      }, 80);
+    }
+    filterDistrictsList(true);
+  }
+
+  function closeDistDropdown() {
+    if (!distBox) return;
+    distBox.classList.remove("show");
+    if (distTrigger) {
+      distTrigger.classList.remove("open");
+      distTrigger.setAttribute("aria-expanded", "false");
+    }
+    activeDistIdx = -1;
+  }
+
+  function toggleDistDropdown(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!distBox) return;
+    if (distBox.classList.contains("show")) {
+      closeDistDropdown();
+    } else {
+      openDistDropdown();
+    }
+  }
+
+  if (distWrap && distTrigger && distBox) {
+    distTrigger.addEventListener("click", toggleDistDropdown);
+
+    distTrigger.addEventListener("keydown", function (e) {
+      if (e.target !== distSearchInput && (e.key === "Enter" || e.key === " " || e.key === "ArrowDown")) {
+        e.preventDefault();
+        openDistDropdown();
+      }
+    });
+
+    // ড্রপডাউনের ভেতরে ক্লিক/টাচ করলে বাইরে ক্লিক হিসেবে গণ্য হওয়া ঠেকানো
+    ["click", "mousedown", "pointerdown", "touchstart"].forEach(function (ev) {
+      distBox.addEventListener(ev, function (e) {
+        e.stopPropagation();
+      }, { passive: ev === "touchstart" });
+    });
+
+    // টাচ স্ক্রল ট্র্যাকিং (মোবাইলে স্ক্রোল করার সময় অসাবধানতাবশত ক্লিক যেন না হয়)
+    if (distOptionsList) {
+      distOptionsList.addEventListener("touchstart", function () {
+        isTouchScrolling = false;
+      }, { passive: true });
+
+      distOptionsList.addEventListener("touchmove", function () {
+        isTouchScrolling = true;
+      }, { passive: true });
+
+      distOptionsList.addEventListener("click", function (e) {
+        if (isTouchScrolling) return;
+        var it = e.target.closest(".dist-option-item");
+        if (!it) return;
+        var val = it.dataset.val;
+        if (val) selectDistrict(val);
+      });
+    }
+
+    // সার্চ ইনপুটে টাইপিং
+    if (distSearchInput) {
+      distSearchInput.addEventListener("input", function () {
+        filterDistrictsList(false);
+      });
+
+      distSearchInput.addEventListener("keydown", function (e) {
+        // কিবোর্ড কম্পোজিশন (যেমন: অভ্র, রিদ্মিক, জিবোর্ড ইত্যাদি) চলাকালীন ইন্টারাপ্ট না করা
+        if (e.isComposing || e.keyCode === 229) return;
+
+        var items = distOptionsList ? distOptionsList.querySelectorAll(".dist-option-item") : [];
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          if (items.length > 0) {
+            activeDistIdx = (activeDistIdx + 1) % items.length;
+            items.forEach(function (el, i) { el.classList.toggle("active", i === activeDistIdx); });
+            if (items[activeDistIdx]) items[activeDistIdx].scrollIntoView({ block: "nearest" });
+          }
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          if (items.length > 0) {
+            activeDistIdx = (activeDistIdx - 1 + items.length) % items.length;
+            items.forEach(function (el, i) { el.classList.toggle("active", i === activeDistIdx); });
+            if (items[activeDistIdx]) items[activeDistIdx].scrollIntoView({ block: "nearest" });
+          }
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          e.stopPropagation();
+          // শুধুমাত্র যদি অ্যারো কি দিয়ে কোনো আইটেম সিলেক্ট করা থাকে, তবেই এন্টারে সিলেক্ট হবে
+          if (activeDistIdx >= 0 && items[activeDistIdx]) {
+            selectDistrict(items[activeDistIdx].dataset.val);
+          } else {
+            filterDistrictsList(false);
+          }
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          closeDistDropdown();
+        }
+      });
+    }
+
+    // ক্লিয়ার (✕) বাটন
+    if (distClearBtn) {
+      distClearBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (distSearchInput) {
+          distSearchInput.value = "";
+          distSearchInput.focus();
+        }
+        filterDistrictsList(false);
+      });
+    }
+
+    // সার্চ "খুঁজুন" বাটন
+    if (distDoSearchBtn) {
+      distDoSearchBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (currentFilteredDistricts.length > 0) {
+          selectDistrict(currentFilteredDistricts[0].bn);
+        } else if (distSearchInput && distSearchInput.value.trim()) {
+          selectDistrict(distSearchInput.value.trim());
+        } else if (distSearchInput) {
+          distSearchInput.focus();
+        }
+      });
+    }
+
+    // কাস্টম এরিয়া বাটন
+    if (distUseCustomBtn) {
+      distUseCustomBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var custom = distSearchInput ? distSearchInput.value.trim() : "";
+        if (custom) selectDistrict(custom);
+      });
+    }
+
+    // বাইরে আসল ইউজার ক্লিক করলে তবেই ড্রপডাউন বন্ধ (সিন্থেটিক বা অটো ক্লিক ইগনোর)
+    document.addEventListener("click", function (e) {
+      if (!e.isTrusted) return;
+      if (!distWrap || !distWrap.contains(e.target)) {
+        closeDistDropdown();
+      }
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        closeDistDropdown();
+      }
+    });
+  }
 
   /* validation */
   function normPhone(v) { return v.replace(/[০-৯]/g, function (d) { return "০১২৩৪৫৬৭৮৯".indexOf(d); }).replace(/[\s\-()]/g, ""); }
@@ -432,7 +758,7 @@
     function bad(k, m) { setErr(k, m); ok = false; if (!first) first = $("#" + k); }
     v.name.length < 2 ? bad("name", "আপনার নাম লিখুন") : setErr("name");
     !BD_PHONE.test(v.phone) ? bad("phone", "সঠিক ১১ ডিজিটের মোবাইল নাম্বার দিন (যেমন 01712345678)") : setErr("phone");
-    v.district.length < 2 ? bad("district", "জেলা বা এলাকার নাম লিখুন") : setErr("district");
+    v.district.length < 2 ? bad("district", "জেলা বা এলাকার নাম নির্বাচন করুন") : setErr("district");
     v.address.length < 6 ? bad("address", "সম্পূর্ণ ঠিকানা লিখুন") : setErr("address");
     if (first) first.focus();
     return ok ? v : null;
@@ -504,7 +830,7 @@
           calc();
 
           btn.disabled = true;
-          setTimeout(function () { btn.disabled = false; }, 4000); // accidental double click guard
+          setTimeout(function () { btn.disabled = false; }, 4000);
           state.busy = false;
           btn.classList.remove("loading");
           $("#submitLabel").textContent = "অর্ডার কনফার্ম করুন";

@@ -49,7 +49,15 @@
     if (!next || reduce) return;
     ["mouseenter", "touchstart", "focusin"].forEach(function (ev) { c.addEventListener(ev, function () { paused = true; }, { passive: true }); });
     ["mouseleave", "touchend", "focusout"].forEach(function (ev) { c.addEventListener(ev, function () { paused = false; }, { passive: true }); });
-    setInterval(function () { if (!paused && !document.hidden && next.style.display !== "none") next.click(); }, 3800);
+    setInterval(function () {
+      if (!paused && !document.hidden && next.style.display !== "none") {
+        if (typeof next.onclick === "function") {
+          next.onclick();
+        } else {
+          next.dispatchEvent(new Event("click", { bubbles: false }));
+        }
+      }
+    }, 3800);
   });
 
   /* ---------- Lightbox (Desktop Slide + Phone Touch Swipe & Scroll) ---------- */

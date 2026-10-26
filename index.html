@@ -91,8 +91,41 @@
           <div class="field"><label for="phone">মোবাইল নাম্বার <i>*</i></label>
             <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01XXXXXXXXX">
             <small class="err" data-err="phone"></small></div>
-          <div class="field"><label for="district">জেলা / এলাকা <i>*</i></label>
-            <input id="district" name="district" type="text" placeholder="যেমন: ঢাকা">
+          <div class="field district-field"><label for="district">জেলা / এলাকা <i>*</i></label>
+            <div class="dist-picker-wrap" id="distPickerWrap">
+              <div class="dist-trigger-box" id="distTriggerBox" role="button" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
+                <span class="dist-pin-icon">📍</span>
+                <input id="district" name="district" type="text" autocomplete="off" readonly placeholder="জেলা নির্বাচন করুন (Select District)">
+                <button type="button" class="dist-btn-search" id="distOpenBtn" aria-label="জেলা খুঁজুন বা নির্বাচন করুন">
+                  <span class="dbs-icon">🔍</span>
+                  <span class="dbs-text">খুঁজুন</span>
+                  <span class="dbs-arrow">▼</span>
+                </button>
+              </div>
+
+              <!-- ড্রপডাউন সার্চ ও জেলা নির্বাচন পপআপ -->
+              <div class="dist-dropdown-box" id="distDropdown">
+                <div class="dist-search-bar">
+                  <span class="dist-search-icon">🔍</span>
+                  <input type="text" id="distSearchInput" placeholder="জেলার নাম লিখুন (যেমন: ঢাকা বা Dhaka)..." autocomplete="off">
+                  <button type="button" class="dist-clear-btn" id="distClearBtn" aria-label="মুছে ফেলুন" title="মুছে ফেলুন" style="display:none">✕</button>
+                  <button type="button" class="dist-submit-search-btn" id="distDoSearchBtn">খুঁজুন</button>
+                </div>
+
+                <div class="dist-status-bar">
+                  <span id="distCountText">মোট ৬৪টি জেলা</span>
+                  <span class="dist-hint">ক্লিক করে নির্বাচন করুন</span>
+                </div>
+
+                <div class="dist-options-list" id="distOptionsList" role="listbox"></div>
+
+                <div class="dist-custom-option" id="distCustomOption" style="display:none">
+                  <button type="button" id="distUseCustomBtn">
+                    <span>✍️ আপনার এলাকা হিসেবে ব্যবহার করুন: </span><strong id="distCustomVal"></strong>
+                  </button>
+                </div>
+              </div>
+            </div>
             <small class="err" data-err="district"></small></div>
           <div class="field"><label for="address">সম্পূর্ণ ঠিকানা <i>*</i></label>
             <textarea id="address" name="address" rows="2" autocomplete="street-address" placeholder="বাসা/রোড/থানা"></textarea>
@@ -107,7 +140,6 @@
             <div class="sum-row head"><span>পণ্য</span><span>মোট</span></div>
             <div class="sum-items-list" id="sumItemsList"></div>
             <div class="sum-row"><span>সাব-টোটাল</span><span id="sumSub">—</span></div>
-            <div class="sum-row discount" id="sumDiscountRow" style="display:none"><span>অফার ডিসকাউন্ট</span><span id="sumDiscount">—</span></div>
             <div class="ship" id="shipping" role="radiogroup" aria-label="ডেলিভারি"></div>
             <div class="sum-row"><span>ডেলিভারি চার্জ</span><span id="sumShip">—</span></div>
             <div class="sum-row total"><span>সর্বমোট</span><span id="sumTotal">—</span></div>

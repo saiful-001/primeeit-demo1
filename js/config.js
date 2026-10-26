@@ -93,13 +93,13 @@ window.SITE_CONFIG = {
   // পেজ লোড হওয়ার সময় ডিফল্টভাবে যে প্রোডাক্টটি সিলেক্ট থাকবে
   defaultProduct: "m1000",
 
-  // ডিসকাউন্ট সেটিংস (Code.gs এর DISCOUNT_CONFIG এর সাথে মিল রাখা হয়েছে)
+  // ডিসকাউন্ট সেটিংস (ব্যবহারকারীর চাহিদা অনুযায়ী ডিসকাউন্ট বন্ধ রাখা হয়েছে)
   discount: {
-    enabled: true,
-    type: "FLAT",               // "FLAT" (নির্দিষ্ট টাকা ছাড়) অথবা "PERCENT" (শতাংশ ছাড়)
-    amount: 50,                 // ছাড়ের পরিমাণ (টাকা বা %)
-    minOrderAmount: 1500,       // সর্বনিম্ন কত টাকার অর্ডারে প্রযোজ্য
-    multiItemBonusDiscount: 50  // একাধিক পণ্য নিলে অতিরিক্ত বোনাস ছাড়
+    enabled: false,              // অফার ডিসকাউন্ট বন্ধ
+    type: "FLAT",
+    amount: 0,
+    minOrderAmount: 0,
+    multiItemBonusDiscount: 0
   },
 
   // ডেলিভারি চার্জ সেটিংস
