@@ -5,9 +5,7 @@
   var C = window.SITE_CONFIG || {}, $ = function (s, r) { return (r || document).querySelector(s); };
   var reduce = matchMedia("(prefers-reduced-motion:reduce)").matches;
 
-  /* flying bees in header */
-  var top = $(".s-top");
-  if (top) for (var i = 0; i < 3; i++) { var b = document.createElement("span"); b.className = "bee"; b.setAttribute("aria-hidden", "true"); b.textContent = "🐝"; top.appendChild(b); }
+  /* flying bees removed per user request */
 
   /* marquee strips: repeat text so it loops seamlessly */
   document.querySelectorAll(".s-strip").forEach(function (el) {
@@ -54,8 +52,14 @@
   /* sticky order bar (hidden while checkout is visible) */
   var bar = document.createElement("div"); bar.className = "sticky-cta"; bar.id = "stickyCta";
   var p = (C.products || []).filter(function (x) { return x.id === C.defaultProduct; })[0] || (C.products || [])[0];
+  var toNum = function (v) {
+    if (typeof v === "number") return isNaN(v) ? 0 : v;
+    var s = String(v || "").replace(/[০-৯]/g, function (d) { return "০১২৩৪৫৬৭৮৯".indexOf(d); }).replace(/[^\d.]/g, "");
+    var n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
   var bn = function (n) { return String(n).replace(/\d/g, function (d) { return "০১২৩৪৫৬৭৮৯"[d]; }); };
-  bar.innerHTML = (p ? '<div class="sp">' + (p.name || "") + "<b>" + (C.currency || "৳") + bn(Number(p.price).toLocaleString("en-US")) + "</b></div>" : "") + '<button type="button" class="btn-order" data-scroll-order>👍 এখনই অর্ডার করুন</button>';
+  bar.innerHTML = (p ? '<div class="sp">' + (p.name || "") + "<b>" + (C.currency || "৳") + bn(toNum(p.price).toLocaleString("en-US")) + "</b></div>" : "") + '<button type="button" class="btn-order" data-scroll-order>👍 এখনই অর্ডার করুন</button>';
   document.body.appendChild(bar);
   $("[data-scroll-order]", bar).addEventListener("click", function () { $("#checkout").scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); });
   var co = $("#checkout"), firstCta = $(".s-cta"), checkoutVisible = false, pastFirst = false;

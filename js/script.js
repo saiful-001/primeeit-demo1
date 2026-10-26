@@ -3,8 +3,14 @@
   var C = window.SITE_CONFIG;
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]; }); };
+  var toNum = function (v) {
+    if (typeof v === "number") return isNaN(v) ? 0 : v;
+    var s = String(v || "").replace(/[০-৯]/g, function (d) { return "০১২৩৪৫৬৭৮৯".indexOf(d); }).replace(/[^\d.]/g, "");
+    var n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
   var bn = function (n) { return String(n).replace(/\d/g, function (d) { return "০১২৩৪৫৬৭৮৯"[d]; }); };
-  var money = function (n) { return C.currency + bn(Number(n).toLocaleString("en-US")); };
+  var money = function (n) { return C.currency + bn(toNum(n).toLocaleString("en-US")); };
   // [[text]] -> emphasised span
   var mark = function (s, cls) { return esc(s).replace(/\[\[(.+?)\]\]/g, '<em class="' + cls + '">$1</em>'); };
 
@@ -43,12 +49,22 @@
   var firstPrice = C.products[0] ? C.products[0].price : 0;
   $("#offerNew").textContent = money(T.offerNew || firstPrice);
 
-  /* ---------- video ---------- */
+  /* ---------- video (Autoplay on page load) ---------- */
   (function () {
     var box = $("#videoBox"), u = C.videoUrl;
     if (!u) { box.innerHTML = '<span class="ph">ভিডিও এখানে যুক্ত হবে</span>'; return; }
-    if (/\.(mp4|webm)(\?|$)/i.test(u)) box.innerHTML = '<video controls playsinline preload="metadata" src="' + esc(u) + '"></video>';
-    else box.innerHTML = '<iframe src="' + esc(u) + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Video"></iframe>';
+    if (/\.(mp4|webm)(\?|$)/i.test(u)) {
+      box.innerHTML = '<video controls autoplay muted playsinline loop preload="auto" src="' + esc(u) + '"></video>';
+    } else {
+      var yt = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w\-]+)/);
+      var embedUrl = yt ? "https://www.youtube.com/embed/" + yt[1] : u;
+      // ব্রাউজারের অটো-প্লে পলিসি অনুযায়ী mute=1 ও autoplay=1 বাধ্যতামূলক
+      var sep = embedUrl.indexOf("?") > -1 ? "&" : "?";
+      if (!/autoplay=/i.test(embedUrl)) {
+        embedUrl += sep + "autoplay=1&mute=1&playsinline=1&rel=0&enablejsapi=1";
+      }
+      box.innerHTML = '<iframe src="' + esc(embedUrl) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen title="Honey Nuts Video"></iframe>';
+    }
   })();
 
   /* ---------- scroll to checkout ---------- */

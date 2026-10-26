@@ -1,14 +1,54 @@
-# Assets
+# 📁 ইমেজ ও ভিডিও ফোল্ডার নির্দেশিকা (Assets Folder Guide)
 
-Put your real images here and point to them in `js/config.js` → `images`.
-Any missing image automatically shows a labelled grey placeholder with the same aspect ratio.
+এই `assets` ফোল্ডারে আপনার ল্যান্ডিং পেজের সমস্ত ছবি ও ভিডিও খুব সুন্দরভাবে ক্যাটাগরি অনুযায়ী সাজানো রয়েছে। আপনি আপনার কম্পিউটার থেকে যেকোনো ছবি বা ভিডিও এখানে রেখে খুব সহজেই পেজের কনটেন্ট পরিবর্তন করতে পারবেন।
 
-Suggested files (all optional):
+---
 
-- `product-1.jpg`, `product-2.jpg`, `product-3.jpg` – package thumbnails (square)
-- `gallery-1.jpg` … – store / product photos (4:3)
-- `review-1.jpg` … – real, authorised customer review screenshots (3:4)
-- `doc-1.jpg` … – genuine certificates / documents supplied by the business (3:4)
-- `video.mp4` – optional promo video (or set a YouTube link in config)
+## 📂 কোন ফোল্ডারে কী রাখবেন?
 
-Only use authentic certificates and genuine reviews.
+### ১. `assets/products/` (পণ্যের ছবি)
+চেকআউট পেজে প্রদর্শিত পণ্যের থাম্বনেইল ছবি:
+- `honey-500.jpg` : খাঁটি মধু ৫০০ গ্রাম এর ছবি
+- `honey-1000.jpg`: খাঁটি মধু ১ কেজি এর ছবি
+- `nut-500.jpg`   : হানি নাট ৫০০ গ্রাম এর ছবি
+- `nut-1000.jpg`  : হানি নাট ১ কেজি এর ছবি
+- `combo.jpg`     : মেগা কম্বো প্যাকের ছবি
+
+> **💡 ছবি পরিবর্তন করার নিয়ম:**  
+> আপনার কম্পিউটার থেকে নতুন ছবি এনে শুধু এই ফোল্ডারে পেস্ট করুন এবং একই নামে রিপ্লেস (Replace) করে দিন। ওয়েবসাইটে স্বয়ংক্রিয়ভাবে আপনার নতুন ছবি চলে আসবে!
+
+---
+
+### ২. `assets/reviews/` (কাস্টমার মতামত / রিভিউ ছবি)
+কাস্টমার রিভিউ সেকশনের ছবিসমূহ:
+- `review-1.svg` থেকে `review-6.svg` (অথবা আপনার `.jpg` / `.png` স্ক্রিনশট)
+- যদি আপনার আসল কাস্টমারের হোয়াটসঅ্যাপ চ্যাট বা ফেসবুক রিভিউ স্ক্রিনশট থাকে, তবে সেই স্ক্রিনশটগুলো এখানে রেখে দিন।
+- `js/config.js` ফাইলের `images.reviews` অংশে ফাইলের নাম বা লোকেশন বসিয়ে দিন।
+
+---
+
+### ৩. `assets/documents/` (ল্যাব টেস্ট রিপোর্ট ও সনদ)
+ল্যাব টেস্ট ও বিএসটিআই সার্টিফিকেটের ছবি:
+- `doc-1.svg` : খাঁটি মধুর ল্যাব টেস্ট রিপোর্ট
+- `doc-2.svg` : বিএসটিআই মান নিয়ন্ত্রণ সনদ
+- `doc-3.svg` : হালাল ও খাদ্য নিরাপত্তা সনদ
+
+> আপনার নিজস্ব ল্যাব টেস্ট রিপোর্ট বা লাইসেন্সের স্ক্যান কপি থাকলে এখানে `.jpg` বা `.png` ফরম্যাটে রেখে `js/config.js` এ যুক্ত করতে পারেন।
+
+---
+
+### ৪. `assets/gallery/` (গ্যালারি ও অফার ব্যানার ছবি)
+ল্যান্ডিং পেজের মাঝের ছবির গ্যালারি ও অফার ব্যানারের ছবি:
+- `gallery-1.jpg` থেকে `gallery-6.jpg` : পণ্য প্রদর্শনীর ছবি
+- এগুলো সরাসরি Unsplash থেকে প্রিমিয়াম কোয়ালিটিতে সেভ করা আছে। আপনি চাইলে আপনার আসল পণ্যের ছবি দিয়ে এগুলো রিপ্লেস করতে পারেন।
+
+---
+
+### ৫. `assets/videos/` (লোকাল ভিডিও ফাইল)
+যদি আপনি ইউটিউব ছাড়া সরাসরি নিজের কম্পিউটার থেকে কোনো ভিডিও চালাতে চান:
+- আপনার ভিডিও ফাইলটি (যেমন: `video.mp4`) এই `assets/videos/` ফোল্ডারে পেস্ট করুন।
+- এরপর `js/config.js` ফাইলে গিয়ে লিখুন:
+  ```javascript
+  videoUrl: "assets/videos/video.mp4",
+  ```
+- আর ইউটিউব ভিডিও চালাতে চাইলে সরাসরি ইউটিউব লিংক দিলেই চলবে!

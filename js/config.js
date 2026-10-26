@@ -6,18 +6,18 @@
 window.SITE_CONFIG = {
 
   // আপনার Google Apps Script Web App URL টি এখানে পেস্ট করুন (যা /exec দিয়ে শেষ হয়)
-  apiEndpoint: "https://script.google.com/macros/s/AKfycbxWxiGfRm12eAosXubvAvdK1uatcZSG49UuVNpWv9U8BnzpA8lnMkJ98PvenMiTlJQ8/exec",
+  apiEndpoint: "",
 
-  // ভিডিওর লিংক (ঐচ্ছিক): ইউটিউব লিংক বা .mp4 ফাইলের লিংক। ভিডিও না থাকলে "" খালি রাখুন।
-  videoUrl: "",
+  // ভিডিওর লিংক: ইউটিউব লিংক বা .mp4 ফাইলের লিংক (যেমন: "assets/videos/video.mp4")
+  videoUrl: "assets/videos/hero-video.mp4",
 
   // টাকার কারেন্সি
   currency: "৳",
 
   // ভাসমান যোগাযোগ বাটন (হোয়াটসঅ্যাপ ও ফোন নম্বর দিতে পারেন, না চাইলে "" খালি রাখুন)
   contact: {
-    whatsapp: "01908166382", // যেমন: "8801700000000"
-    phone: "01908166382"     // যেমন: "01700000000"
+    whatsapp: "", // যেমন: "8801700000000"
+    phone: ""     // যেমন: "01700000000"
   },
 
   // ওয়েবসাইটের টেক্সট ও কনটেন্ট
@@ -35,8 +35,8 @@ window.SITE_CONFIG = {
     reviewsTitle: "আমাদের কাস্টমারদের মতামত",
     docsTitle: "আমাদের ল্যাব টেস্ট রিপোর্ট ও ডকুমেন্টস",
     offerLine: "খাঁটি মধু ও হানি নাটে চলছে বিশেষ ছাড়!",
-    offerOld: "২৪৫০",               // পূর্বের মূল্য
-    offerNew: "২২০০",               // অফার মূল্য
+    offerOld: 2450,                 // পূর্বের মূল্য
+    offerNew: 2200,                 // অফার মূল্য
     offerNote: "সারা দেশে হোম ডেলিভারি ও ক্যাশ অন ডেলিভারি সুবিধা (পণ্য পেয়ে টাকা দিন)",
     strip2: "👇 [[এখনই অর্ডার]] করতে নিচের ফর্মটি পূরণ করুন",
     checkoutTitle: "অর্ডার করতে নিচের ফর্মটি পূরণ করুন",
@@ -54,7 +54,7 @@ window.SITE_CONFIG = {
       price: 550,
       oldPrice: 650,
       badge: "",
-      thumb: "product-honey-500"
+      thumb: "assets/products/honey-500.jpg"
     },
     {
       id: "m1000",
@@ -62,7 +62,7 @@ window.SITE_CONFIG = {
       price: 1050,
       oldPrice: 1200,
       badge: "জনপ্রিয়",
-      thumb: "product-honey-1000"
+      thumb: "assets/products/honey-1000.jpg"
     },
     {
       id: "hn500",
@@ -70,7 +70,7 @@ window.SITE_CONFIG = {
       price: 650,
       oldPrice: 750,
       badge: "",
-      thumb: "product-nut-500"
+      thumb: "assets/products/nut-500.jpg"
     },
     {
       id: "hn1000",
@@ -78,7 +78,7 @@ window.SITE_CONFIG = {
       price: 1250,
       oldPrice: 1400,
       badge: "সেরা পছন্দ",
-      thumb: "product-nut-1000"
+      thumb: "assets/products/nut-1000.jpg"
     },
     {
       id: "combo",
@@ -86,7 +86,7 @@ window.SITE_CONFIG = {
       price: 2200,
       oldPrice: 2450,
       badge: "মেগা অফার",
-      thumb: "product-combo"
+      thumb: "assets/products/combo.jpg"
     }
   ],
 
@@ -111,29 +111,40 @@ window.SITE_CONFIG = {
   freeShippingMinTotal: 0,      // কত টাকার বেশি কিনলে ফ্রি ডেলিভারি (না চাইলে ০ রাখুন)
   maxQty: 20,
 
-  // ছবিসমূহ (Unsplash CDN থেকে খাঁটি মধু ও পুষ্টিকর হানি নাটের প্রিমিয়াম ছবি)
+  // ছবি ও মিডিয়া সেটিংস (assets ফোল্ডারে আপনার ছবি রেখে সহজে পরিবর্তন করতে পারেন)
   images: {
     base: "assets/",
     ext: ".jpg",
     products: {
-      "product-honey-500": "https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=300&h=300&q=75",
-      "product-honey-1000": "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=300&h=300&q=75",
-      "product-nut-500": "https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=300&h=300&q=75",
-      "product-nut-1000": "https://images.unsplash.com/photo-1508061253366-f7da158b6d46?auto=format&fit=crop&w=300&h=300&q=75",
-      "product-combo": "https://images.unsplash.com/photo-1679941279735-b3b35e8bc476?auto=format&fit=crop&w=300&h=300&q=75"
+      "product-honey-500": "assets/products/honey-500.jpg",
+      "product-honey-1000": "assets/products/honey-1000.jpg",
+      "product-nut-500": "assets/products/nut-500.jpg",
+      "product-nut-1000": "assets/products/nut-1000.jpg",
+      "product-combo": "assets/products/combo.jpg"
     },
-    benefit: "https://images.unsplash.com/photo-1613548058193-1cd24c1bebcf?auto=format&fit=crop&w=900&h=400&q=70",
-    offerBg: "https://images.unsplash.com/photo-1642067958050-bfba120a57e2?auto=format&fit=crop&w=1000&h=500&q=60",
+    benefit: "assets/gallery/gallery-1.jpg",
+    offerBg: "assets/gallery/gallery-2.jpg",
     gallery: [
-      "https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=600&h=450&q=70",
-      "https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=600&h=450&q=70",
-      "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=600&h=450&q=70",
-      "https://images.unsplash.com/photo-1508061253366-f7da158b6d46?auto=format&fit=crop&w=600&h=450&q=70",
-      "https://images.unsplash.com/photo-1679941279735-b3b35e8bc476?auto=format&fit=crop&w=600&h=450&q=70",
-      "https://images.unsplash.com/photo-1545246909-b4e087f05214?auto=format&fit=crop&w=600&h=450&q=70"
+      "assets/gallery/gallery-1.jpg",
+      "assets/gallery/gallery-2.jpg",
+      "assets/gallery/gallery-3.jpg",
+      "assets/gallery/gallery-4.jpg",
+      "assets/gallery/gallery-5.jpg",
+      "assets/gallery/gallery-6.jpg"
     ],
-    reviews:   ["review-1", "review-2", "review-3", "review-4", "review-5", "review-6"],
-    documents: ["doc-1", "doc-2", "doc-3"]
+    reviews: [
+      "assets/reviews/review-1.svg",
+      "assets/reviews/review-2.svg",
+      "assets/reviews/review-3.svg",
+      "assets/reviews/review-4.svg",
+      "assets/reviews/review-5.svg",
+      "assets/reviews/review-6.svg"
+    ],
+    documents: [
+      "assets/documents/doc-1.svg",
+      "assets/documents/doc-2.svg",
+      "assets/documents/doc-3.svg"
+    ]
   },
 
   placeholderLabels: {

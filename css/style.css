@@ -37,9 +37,7 @@ em.g{font-style:normal;color:var(--green-2)} em.o{font-style:normal;color:var(--
 .s-top h1{position:relative;z-index:1;max-width:var(--w);margin:auto;font-size:1.8rem;font-weight:700;line-height:1.35;color:var(--brown)}
 .s-top h1 em.g{background:linear-gradient(135deg,var(--green),#22a06b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 @keyframes drift{to{background-position:560px 980px}}
-.bee{z-index:0;position:absolute;font-size:1.5rem;top:30%;left:-10%;opacity:.95;pointer-events:none;animation:fly 14s linear infinite}
-.bee:nth-child(2){top:60%;font-size:1.1rem;animation-duration:19s;animation-delay:-6s}
-.bee:nth-child(3){top:12%;font-size:1.2rem;animation-duration:23s;animation-delay:-12s;animation-direction:reverse}
+
 @keyframes fly{0%{transform:translate(0,0)}25%{transform:translate(30vw,-18px) rotate(8deg)}50%{transform:translate(60vw,12px) rotate(-6deg)}75%{transform:translate(90vw,-14px) rotate(6deg)}100%{transform:translate(120vw,0)}}
 
 /* ===== 2 video ===== */

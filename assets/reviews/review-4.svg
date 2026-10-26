@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 600" width="450" height="600">
+  <defs>
+    <linearGradient id="revBg3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fffefb"/>
+      <stop offset="100%" stop-color="#f5ede0"/>
+    </linearGradient>
+    <filter id="revSh3" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <rect width="450" height="600" fill="url(#revBg3)"/>
+  
+  <!-- Header Bar -->
+  <rect x="0" y="0" width="450" height="78" fill="#0F5132"/>
+  <circle cx="44" cy="39" r="22" fill="#8338ec"/>
+  <text x="44" y="46" fill="#ffffff" font-family="'Hind Siliguri', 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle">সা</text>
+  
+  <text x="78" y="34" fill="#ffffff" font-family="'Hind Siliguri', 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold">ডা. সায়মা আক্তার</text>
+  <text x="78" y="55" fill="#a3e9c4" font-family="'Hind Siliguri', 'Segoe UI', Arial, sans-serif" font-size="12">উত্তরা সেক্টর ৭, ঢাকা • ৪ দিন আগে</text>
+
+  <!-- Verified Badge -->
+  <rect x="330" y="24" width="102" height="28" rx="14" fill="#198754"/>
+  <text x="381" y="43" fill="#ffffff" font-family="'Hind Siliguri', 'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle">✔ ভেরিফাইড ক্রেতা</text>
+
+  <!-- Review Card Box -->
+  <rect x="20" y="96" width="410" height="480" rx="16" fill="#ffffff" stroke="#e6dac0" stroke-width="1.5" filter="url(#revSh3)"/>
+
+  <!-- Stars -->
+  <text x="40" y="136" font-size="24" fill="#ffb703">★★★★★</text>
+  <rect x="180" y="117" width="90" height="24" rx="6" fill="#fff2d6"/>
+  <text x="225" y="134" font-family="'Hind Siliguri', 'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#b47b00" text-anchor="middle">৫-স্টার রেটিং</text>
+
+  <!-- Product Tag -->
+  <rect x="40" y="156" width="370" height="34" rx="8" fill="#f4f8f5" stroke="#cfe5d8" stroke-width="1"/>
+  <text x="54" y="178" font-family="'Hind Siliguri', 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#0f5132">অর্ডারকৃত পণ্য: স্পেশাল কম্বো অফার</text>
+
+  <!-- Message Bubble -->
+  <rect x="40" y="206" width="370" height="255" rx="12" fill="#faf8f4" stroke="#e8ded0" stroke-width="1"/>
+  <text x="56" y="240" font-family="Georgia, serif" font-size="36" fill="#e5d29b">“</text>
+  
+  <!-- Review Text in Pure SVG Tspans -->
+  <text x="62" y="260" font-family="'Hind Siliguri', 'Segoe UI', Arial, sans-serif" font-size="15" fill="#2b1a0c" font-weight="500">
+    <tspan x="62" dy="0">আমার আব্বু-আম্মুর নিয়মিত স্বাস্থ্য সুরক্ষার জন্য হানি নাট</tspan>
+<tspan x="62" dy="28">ও খাঁটি মধু নিয়েছিলাম। কোয়ালিটি অত্যন্ত প্রিমিয়াম এবং</tspan>
+<tspan x="62" dy="28">খাঁটি। কোনো কৃত্রিম মিষ্টি নেই। পরিবারের সবাই খুব খুশি।</tspan>
+
+  </text>
+
+  <!-- Footer Seal -->
+  <rect x="40" y="480" width="370" height="74" rx="10" fill="#f0f9f3" stroke="#c3e6cb" stroke-width="1"/>
+  <circle cx="75" cy="517" r="22" fill="#28a745"/>
+  <text x="75" y="524" font-size="18" fill="#ffffff" text-anchor="middle">✓</text>
+  <text x="110" y="512" font-family="'Hind Siliguri', 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#0f5132">১০০% আসল কাস্টমার রিভিউ</text>
+  <text x="110" y="532" font-family="'Hind Siliguri', 'Segoe UI', Arial, sans-serif" font-size="12" fill="#555555">ক্যাশ অন ডেলিভারিতে ক্রয়কৃত ও পরীক্ষিত</text>
+</svg>
