@@ -3,6 +3,7 @@
   var C = window.SITE_CONFIG;
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]; }); };
+  
   var toNum = function (v) {
     if (typeof v === "number") return isNaN(v) ? 0 : v;
     var s = String(v || "").replace(/[০-৯]/g, function (d) { return "০১২৩৪৫৬৭৮৯".indexOf(d); }).replace(/[^\d.]/g, "");
@@ -49,21 +50,70 @@
   var firstPrice = C.products[0] ? C.products[0].price : 0;
   $("#offerNew").textContent = money(T.offerNew || firstPrice);
 
-  /* ---------- video (Autoplay on page load) ---------- */
+  /* ---------- video (Fast Load + Instant Autoplay + Sound) ---------- */
   (function () {
     var box = $("#videoBox"), u = C.videoUrl;
-    if (!u) { box.innerHTML = '<span class="ph">ভিডিও এখানে যুক্ত হবে</span>'; return; }
-    if (/\.(mp4|webm)(\?|$)/i.test(u)) {
+    if (!box || !u) return;
+
+    var isMp4 = /\.(mp4|webm)(\?|$)/i.test(u);
+    var soundBtn = document.createElement("button");
+    soundBtn.type = "button";
+    soundBtn.className = "video-sound-btn";
+    soundBtn.innerHTML = '<span class="vs-icon">🔇</span> সাউন্ড চালু করুন';
+
+    if (isMp4) {
       box.innerHTML = '<video controls autoplay muted playsinline loop preload="auto" src="' + esc(u) + '"></video>';
+      box.appendChild(soundBtn);
+      var vid = $("video", box);
+      function unmuteMp4() {
+        if (vid) {
+          vid.muted = false;
+          vid.volume = 1.0;
+          soundBtn.classList.add("unmuted");
+          soundBtn.innerHTML = '<span class="vs-icon">🔊</span> সাউন্ড চালু আছে';
+        }
+      }
+      soundBtn.onclick = function (e) { e.stopPropagation(); unmuteMp4(); };
+      window.addEventListener("click", function () { unmuteMp4(); }, { once: true });
+      window.addEventListener("touchstart", function () { unmuteMp4(); }, { once: true });
     } else {
       var yt = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w\-]+)/);
-      var embedUrl = yt ? "https://www.youtube.com/embed/" + yt[1] : u;
-      // ব্রাউজারের অটো-প্লে পলিসি অনুযায়ী mute=1 ও autoplay=1 বাধ্যতামূলক
+      var videoId = yt ? yt[1] : "";
+      var embedUrl = videoId ? "https://www.youtube-nocookie.com/embed/" + videoId : u;
+
+      // প্রি-লোডেড থাম্বনেইল পোস্টার যাতে ০ সেকেন্ড ব্ল্যাক স্ক্রিন থাকে
+      if (videoId) {
+        box.style.background = "#000 url('https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg') center/cover no-repeat";
+      }
+
       var sep = embedUrl.indexOf("?") > -1 ? "&" : "?";
       if (!/autoplay=/i.test(embedUrl)) {
-        embedUrl += sep + "autoplay=1&mute=1&playsinline=1&rel=0&enablejsapi=1";
+        embedUrl += sep + "autoplay=1&mute=1&playsinline=1&rel=0&enablejsapi=1&controls=1";
       }
-      box.innerHTML = '<iframe src="' + esc(embedUrl) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen title="Honey Nuts Video"></iframe>';
+
+      box.innerHTML = '<iframe id="heroYtFrame" src="' + esc(embedUrl) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="eager" title="Honey Nuts Video"></iframe>';
+      box.appendChild(soundBtn);
+
+      var iframe = $("#heroYtFrame", box);
+      var unmuted = false;
+      function unmuteYt() {
+        if (unmuted || !iframe || !iframe.contentWindow) return;
+        unmuted = true;
+        iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: "unMute", args: "" }), "*");
+        iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: "setVolume", args: [100] }), "*");
+        soundBtn.classList.add("unmuted");
+        soundBtn.innerHTML = '<span class="vs-icon">🔊</span> সাউন্ড চালু আছে';
+        setTimeout(function () {
+          soundBtn.style.opacity = "0";
+          soundBtn.style.pointerEvents = "none";
+        }, 2500);
+      }
+
+      soundBtn.onclick = function (e) { e.stopPropagation(); unmuteYt(); };
+      // স্ক্রিনে প্রথম স্পর্শ বা ক্লিকে স্বয়ংক্রিয়ভাবে সাউন্ড চালু
+      window.addEventListener("click", function () { unmuteYt(); }, { once: true });
+      window.addEventListener("touchstart", function () { unmuteYt(); }, { once: true });
+      window.addEventListener("scroll", function () { unmuteYt(); }, { once: true });
     }
   })();
 
@@ -116,7 +166,7 @@
     build();
   });
 
-  /* ---------- checkout (Multiple Products Support) ---------- */
+  /* ---------- checkout (Multiple Products Support + Interactive Cart) ---------- */
   var state = {
     items: {}, // key: productId, value: quantity
     sid: C.defaultShipping || (C.shipping[0] && C.shipping[0].id) || "dhaka",
@@ -129,10 +179,10 @@
     state.items[defProd] = 1;
   }
 
-  var pkgBox = $("#packages"), shipBox = $("#shipping");
+  var pkgBox = $("#packages"), shipBox = $("#shipping"), sumListEl = $("#sumItemsList");
   var ship = function () { return C.shipping.filter(function (s) { return s.id === state.sid; })[0]; };
 
-  // পণ্যসমূহ রেন্ডার করা
+  // পণ্যসমূহ রেন্ডার করা (বামপাশের কার্ড)
   C.products.forEach(function (p) {
     var card = document.createElement("div");
     card.className = "pkg";
@@ -162,7 +212,7 @@
     shipBox.appendChild(l);
   });
 
-  // পণ্য কার্ড ও কোয়ান্টিটি ইভেন্ট হ্যান্ডলার
+  // বামপাশের প্রোডাক্ট কার্ডে ক্লিক বা পরিমাণ পরিবর্তনের হ্যান্ডলার
   pkgBox.addEventListener("click", function (e) {
     var minusBtn = e.target.closest(".minus");
     var plusBtn = e.target.closest(".plus");
@@ -214,6 +264,42 @@
     calc();
   });
 
+  // ডানপাশের "আপনার অর্ডার" কার্ট থেকে পরিমাণ (+ / -) পরিবর্তনের হ্যান্ডলার
+  if (sumListEl) {
+    sumListEl.addEventListener("click", function (e) {
+      var minusBtn = e.target.closest(".sci-btn.minus");
+      var plusBtn = e.target.closest(".sci-btn.plus");
+      var card = e.target.closest(".sum-cart-item");
+      if (!card) return;
+      var pid = card.dataset.id;
+      if (!pid) return;
+
+      if (minusBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var cur = state.items[pid] || 0;
+        if (cur > 1) {
+          state.items[pid] = cur - 1;
+        } else {
+          delete state.items[pid];
+        }
+        calc();
+        return;
+      }
+
+      if (plusBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var curQ = state.items[pid] || 0;
+        if (curQ < C.maxQty) {
+          state.items[pid] = curQ + 1;
+        }
+        calc();
+        return;
+      }
+    });
+  }
+
   shipBox.addEventListener("change", function (e) {
     if (e.target.name === "shipping") {
       state.sid = e.target.value;
@@ -227,7 +313,7 @@
     var selectedList = [];
     var subtotal = 0;
 
-    // পণ্য তালিকা আপডেট
+    // পণ্য তালিকা আপডেট (বামপাশের প্যাকেজ কার্ড)
     pkgBox.querySelectorAll(".pkg").forEach(function (card) {
       var pid = card.dataset.id;
       var qty = state.items[pid] || 0;
@@ -255,16 +341,25 @@
       i.checked = i.value === state.sid;
     });
 
-    // ডানপাশের অর্ডারের তালিকা রেন্ডার
-    var sumListEl = $("#sumItemsList");
+    // ডানপাশের "আপনার অর্ডার" কার্ট রেন্ডার (+/- বাটন ও প্রতিটি পণ্যের দাম সহ)
     if (sumListEl) {
       if (selectedList.length === 0) {
         sumListEl.innerHTML = '<div class="sum-row empty-notice"><span>⚠️ কোনো পণ্য সিলেক্ট করা হয়নি (কমপক্ষে ১টি সিলেক্ট করুন)</span><span>' + money(0) + '</span></div>';
       } else {
         sumListEl.innerHTML = selectedList.map(function (it) {
-          return '<div class="sum-row it-row">' +
-            '<span class="it-name">' + esc(it.product.name) + '<b class="it-qty"> × ' + bn(it.qty) + '</b></span>' +
-            '<span class="it-pr">' + money(it.total) + '</span>' +
+          return '<div class="sum-cart-item" data-id="' + esc(it.product.id) + '">' +
+            '<div class="sci-details">' +
+              '<span class="sci-name">' + esc(it.product.name) + '</span>' +
+              '<span class="sci-unit-price">প্রতিটি: ' + money(it.product.price) + '</span>' +
+            '</div>' +
+            '<div class="sci-action">' +
+              '<div class="sci-qty">' +
+                '<button type="button" class="sci-btn minus" data-id="' + esc(it.product.id) + '" aria-label="কমান">−</button>' +
+                '<span class="sci-num">' + bn(it.qty) + '</span>' +
+                '<button type="button" class="sci-btn plus" data-id="' + esc(it.product.id) + '" aria-label="বাড়ান">+</button>' +
+              '</div>' +
+              '<span class="sci-item-total">' + money(it.total) + '</span>' +
+            '</div>' +
           '</div>';
         }).join("");
       }
