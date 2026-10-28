@@ -6,7 +6,16 @@
 window.SITE_CONFIG = {
 
   // আপনার Google Apps Script Web App URL টি এখানে পেস্ট করুন (যা /exec দিয়ে শেষ হয়)
-  apiEndpoint: "https://script.google.com/macros/s/AKfycby3qTjUih_scnIbOhlHunXzlusXi6wNF2thMydPg85V7KnPB8QbEpr1QQ7oYQsQUrmn/exec",
+  apiEndpoint: "https://script.google.com/macros/s/AKfycbwzdtfBwkvP1lIlvFNcS8r_W0ciqkha6pd19IIeh3CuB_hStWAq_SvgTib36ATKD2av/exec",
+
+  // লাইভ গুগল শিট ডেমো বাটন সেটিংস (কাস্টমার বা ক্লায়েন্টকে ডাটা সেভ হওয়ার লাইভ ডেমো দেখানোর জন্য)
+  sheetDemo: {
+    enabled: true,              // ডেমো বাটন চালু রাখতে true, বন্ধ করতে false
+    url: "https://docs.google.com/spreadsheets/d/1CwGdVmheHb11es3sCuy_G1lASPXMiDYP1hmT8U7BziI/edit?gid=0#gid=0", // আপনার গুগল শিটের ব্রাউজার লিংক
+    title: "📊 আপনার ডাটা কীভাবে সেভ হবে তা দেখে নিন",
+    subtitle: "অর্ডার সাবমিট করার সাথে সাথে কাস্টমারের নাম, মোবাইল, ঠিকানা ও অর্ডার তথ্য কীভাবে প্রফেশনাল গুগল শিটে স্বয়ংক্রিয়ভাবে জমা হয় তা সরাসরি দেখুন।",
+    btnText: "📋 আপনার ডাটা যেভাবে সেভ হবে তা লাইভ দেখে নিন ➔"
+  },
 
   // ভিডিওর লিংক: ইউটিউব লিংক বা .mp4 ফাইলের লিংক (যেমন: "assets/videos/video.mp4")
   videoUrl: "assets/videos/hero-video.mp4",

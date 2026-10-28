@@ -118,6 +118,22 @@
   var firstPrice = C.products[0] ? C.products[0].price : 0;
   $("#offerNew").textContent = money(T.offerNew || firstPrice);
 
+  /* ---------- লাইভ গুগল শিট ডেমো কার্ড সেটআপ ---------- */
+  (function () {
+    var demo = C.sheetDemo;
+    var card = $("#sheetDemoCard");
+    if (!card) return;
+    if (!demo || demo.enabled === false || !demo.url) {
+      card.style.display = "none";
+      return;
+    }
+    var btn = $("#sheetDemoBtn"), title = $("#sdcTitle"), desc = $("#sdcDesc"), btnTxt = $("#sdcBtnText");
+    if (title && demo.title) title.textContent = demo.title;
+    if (desc && demo.subtitle) desc.textContent = demo.subtitle;
+    if (btnTxt && demo.btnText) btnTxt.textContent = demo.btnText;
+    if (btn) btn.href = demo.url;
+  })();
+
   /* ---------- video (Fast Load + Instant Autoplay + Sound) ---------- */
   (function () {
     var box = $("#videoBox"), u = C.videoUrl;
@@ -770,7 +786,7 @@
 
   /* submit */
   var form = $("#orderForm"), btn = $("#submitBtn"), msg = $("#formMsg");
-  function showMsg(type, text) { msg.className = "form-msg show " + type; msg.textContent = text; msg.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+  function showMsg(type, text) { msg.className = "form-msg show " + type; msg.innerHTML = text; msg.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
   function busy(on) { state.busy = on; btn.disabled = on; btn.classList.toggle("loading", on); $("#submitLabel").textContent = on ? "অর্ডার পাঠানো হচ্ছে…" : "অর্ডার কনফার্ম করুন"; }
 
   form.addEventListener("submit", function (e) {
@@ -838,7 +854,11 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d && d.success) {
-          showMsg("ok", "ধন্যবাদ! আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে। আপনার অর্ডার আইডি: " + d.orderId + " | সর্বমোট বিল: " + money(d.total) + "। আমরা অতি দ্রুত আপনার সাথে যোগাযোগ করব।");
+          var okText = "🎉 ধন্যবাদ! আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে।<br>আপনার অর্ডার আইডি: <strong>" + esc(d.orderId) + "</strong> | সর্বমোট বিল: <strong>" + money(d.total) + "</strong>। আমরা অতি দ্রুত আপনার সাথে যোগাযোগ করব।";
+          if (C.sheetDemo && C.sheetDemo.url) {
+            okText += '<br><a href="' + esc(C.sheetDemo.url) + '" target="_blank" rel="noopener noreferrer" class="order-sheet-link">📊 শিটে আপনার অর্ডারটি সেভ হওয়া এখনই দেখুন ➔</a>';
+          }
+          showMsg("ok", okText);
           
           try {
             localStorage.setItem("honey_last_order", JSON.stringify({
