@@ -183,7 +183,8 @@
     return isNaN(n) ? 0 : n;
   };
   var bn = function (n) { return String(n).replace(/\d/g, function (d) { return "০১২৩৪৫৬৭৮৯"[d]; }); };
-  bar.innerHTML = (p ? '<div class="sp">' + (p.name || "") + "<b>" + (C.currency || "৳") + bn(toNum(p.price).toLocaleString("en-US")) + "</b></div>" : "") + '<button type="button" class="btn-order" data-scroll-order>👍 এখনই অর্ডার করুন</button>';
+  var btnText = (C.copy && C.copy.orderBtnText) || "👍 এখনই অর্ডার করুন";
+  bar.innerHTML = (p ? '<div class="sp">' + (p.name || "") + "<b>" + (C.currency || "৳") + bn(toNum(p.price).toLocaleString("en-US")) + "</b></div>" : "") + '<button type="button" class="btn-order" data-scroll-order>' + btnText + '</button>';
   document.body.appendChild(bar);
   $("[data-scroll-order]", bar).addEventListener("click", function () { $("#checkout").scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); });
   var co = $("#checkout"), firstCta = $(".s-cta"), checkoutVisible = false, pastFirst = false;

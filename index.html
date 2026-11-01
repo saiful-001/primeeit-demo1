@@ -86,7 +86,7 @@
         <h3 class="sdc-title" id="sdcTitle">📊 আপনার ডাটা কীভাবে সেভ হবে তা দেখে নিন</h3>
         <p class="sdc-desc" id="sdcDesc">অর্ডার সাবমিট করার সাথে সাথে কাস্টমারের নাম, মোবাইল, ঠিকানা ও অর্ডার তথ্য কীভাবে প্রফেশনাল গুগল শিটে স্বয়ংক্রিয়ভাবে জমা হয় তা সরাসরি দেখুন।</p>
       </div>
-      <a href="#" target="_blank" rel="noopener noreferrer" class="sdc-btn" id="sheetDemoBtn">
+      <a href="https://docs.google.com/spreadsheets/d/1sumrLfQKbrsm_JQ7p0X5FTZBij1iImxzvUBiYmSL9dk/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer" class="sdc-btn" id="sheetDemoBtn">
         <span class="sdc-icon">📑</span>
         <span id="sdcBtnText">আপনার ডাটা যেভাবে সেভ হবে তা লাইভ দেখে নিন ➔</span>
       </a>
@@ -95,10 +95,10 @@
     <form id="orderForm" novalidate>
       <div class="co-grid">
         <div class="co-left">
-          <h3 class="sub">পছন্দের পণ্য বেছে নিন (এক বা একাধিক সিলেক্ট করতে পারেন)</h3>
+          <h3 class="sub" id="packagesTitle">পছন্দের পণ্য বেছে নিন (এক বা একাধিক সিলেক্ট করতে পারেন)</h3>
           <div class="packages" id="packages" aria-label="পণ্য তালিকা"></div>
 
-          <h3 class="sub">বিলিং তথ্য</h3>
+          <h3 class="sub" id="billingTitle">বিলিং তথ্য</h3>
           <div class="field"><label for="name">আপনার নাম <i>*</i></label>
             <input id="name" name="name" type="text" autocomplete="name" placeholder="আপনার পূর্ণ নাম">
             <small class="err" data-err="name"></small></div>
@@ -149,7 +149,7 @@
         </div>
 
         <aside class="co-right">
-          <h3 class="sub">আপনার অর্ডার</h3>
+          <h3 class="sub" id="cartTitle">আপনার অর্ডার</h3>
           <div class="summary">
             <div class="sum-row head"><span>পণ্য</span><span>মোট</span></div>
             <div class="sum-items-list" id="sumItemsList"></div>
@@ -157,7 +157,7 @@
             <div class="ship" id="shipping" role="radiogroup" aria-label="ডেলিভারি"></div>
             <div class="sum-row"><span>ডেলিভারি চার্জ</span><span id="sumShip">—</span></div>
             <div class="sum-row total"><span>সর্বমোট</span><span id="sumTotal">—</span></div>
-            <p class="pay-note">ক্যাশ অন ডেলিভারি – পণ্য হাতে পেয়ে টাকা দিন।</p>
+            <p class="pay-note" id="payNote">ক্যাশ অন ডেলিভারি – পণ্য হাতে পেয়ে টাকা দিন।</p>
           </div>
           <input type="text" name="website" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
           <button type="submit" class="btn-submit" id="submitBtn"><span class="spin" aria-hidden="true"></span><span id="submitLabel">অর্ডার কনফার্ম করুন</span></button>
@@ -182,8 +182,8 @@
   <span class="fdb-text">Live Demo</span>
 </a>
 
-<script src="js/config.js"></script>
-<script src="js/script.js"></script>
-<script src="js/effects.js"></script>
+<script src="js/config.js?v=3.1"></script>
+<script src="js/script.js?v=3.1"></script>
+<script src="js/effects.js?v=3.1"></script>
 </body>
 </html>

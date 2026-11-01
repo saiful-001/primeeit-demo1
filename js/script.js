@@ -1,6 +1,18 @@
 (function () {
   "use strict";
-  var C = window.SITE_CONFIG;
+  var C = window.SITE_CONFIG || {};
+
+  // ব্যাকওয়ার্ড ও নতুন কনফিগ নরম্যালাইজেশন (sheet, tracking, pixel)
+  if (C.sheet) {
+    if (!C.apiEndpoint) C.apiEndpoint = C.sheet.apiEndpoint;
+    if (!C.sheetUrl) C.sheetUrl = C.sheet.sheetUrl;
+    if (C.sheetDemo === undefined) {
+      C.sheetDemo = {
+        enabled: C.sheet.showDemoButton !== false,
+        url: C.sheet.sheetUrl
+      };
+    }
+  }
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]; }); };
   
@@ -98,25 +110,36 @@
   }
 
   /* ---------- static copy ---------- */
-  var T = C.copy;
-  $("#topHeading").innerHTML = mark(T.topHeading, "g");
-  $("#noticeText").textContent = T.notice;
-  $("#benefitsTitle").textContent = T.benefitsTitle;
-  $("#benefitsList").innerHTML = T.benefits.map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("");
-  $("#strip1").innerHTML = mark(T.strip1, "r");
-  $("#strip2").innerHTML = mark(T.strip2, "r");
-  $("#reviewsTitle").textContent = T.reviewsTitle;
-  $("#docsTitle").textContent = T.docsTitle;
-  $("#checkoutTitle").textContent = T.checkoutTitle;
-  $("#footMsg").textContent = T.footMsg;
-  $("#footCredit").textContent = T.footCredit;
-  $("#lnkPrivacy").href = T.privacyUrl; $("#lnkTerms").href = T.termsUrl;
-  $("#offerLine").textContent = T.offerLine;
-  $("#offerNote").textContent = T.offerNote;
+  var T = C.copy || {};
+  if (T.topHeading && $("#topHeading")) $("#topHeading").innerHTML = mark(T.topHeading, "g");
+  if (T.notice && $("#noticeText")) $("#noticeText").textContent = T.notice;
+  if (T.benefitsTitle && $("#benefitsTitle")) $("#benefitsTitle").textContent = T.benefitsTitle;
+  if (T.benefits && $("#benefitsList")) $("#benefitsList").innerHTML = T.benefits.map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("");
+  if (T.strip1 && $("#strip1")) $("#strip1").innerHTML = mark(T.strip1, "r");
+  if (T.strip2 && $("#strip2")) $("#strip2").innerHTML = mark(T.strip2, "r");
+  if (T.reviewsTitle && $("#reviewsTitle")) $("#reviewsTitle").textContent = T.reviewsTitle;
+  if (T.docsTitle && $("#docsTitle")) $("#docsTitle").textContent = T.docsTitle;
+  if (T.checkoutTitle && $("#checkoutTitle")) $("#checkoutTitle").textContent = T.checkoutTitle;
+  if (T.packagesTitle && $("#packagesTitle")) $("#packagesTitle").textContent = T.packagesTitle;
+  if (T.billingTitle && $("#billingTitle")) $("#billingTitle").textContent = T.billingTitle;
+  if (T.cartTitle && $("#cartTitle")) $("#cartTitle").textContent = T.cartTitle;
+  if (T.payNote && $("#payNote")) $("#payNote").textContent = T.payNote;
+  if (T.submitBtnText && $("#submitLabel")) $("#submitLabel").textContent = T.submitBtnText;
+  if (T.orderBtnText) {
+    document.querySelectorAll("[data-scroll-order]").forEach(function (b) {
+      b.textContent = T.orderBtnText;
+    });
+  }
+  if (T.footMsg && $("#footMsg")) $("#footMsg").textContent = T.footMsg;
+  if (T.footCredit && $("#footCredit")) $("#footCredit").textContent = T.footCredit;
+  if (T.privacyUrl && $("#lnkPrivacy")) $("#lnkPrivacy").href = T.privacyUrl;
+  if (T.termsUrl && $("#lnkTerms")) $("#lnkTerms").href = T.termsUrl;
+  if (T.offerLine && $("#offerLine")) $("#offerLine").textContent = T.offerLine;
+  if (T.offerNote && $("#offerNote")) $("#offerNote").textContent = T.offerNote;
   var oldEl = $("#offerOld");
-  if (T.offerOld) oldEl.textContent = money(T.offerOld); else oldEl.remove();
+  if (T.offerOld && oldEl) oldEl.textContent = money(T.offerOld); else if (oldEl) oldEl.remove();
   var firstPrice = C.products[0] ? C.products[0].price : 0;
-  $("#offerNew").textContent = money(T.offerNew || firstPrice);
+  if ($("#offerNew")) $("#offerNew").textContent = money(T.offerNew || firstPrice);
 
   /* ---------- লাইভ গুগল শিট ডেমো কার্ড সেটআপ ---------- */
   (function () {
@@ -827,6 +850,8 @@
       return;
     }
 
+    var targetSheetUrl = C.sheetUrl || (C.sheet && C.sheet.sheetUrl) || (C.sheetDemo && C.sheetDemo.url) || "";
+    var trk = window.__honeyTracking || {};
     var payload = {
       name: v.name,
       phone: v.phone,
@@ -838,7 +863,19 @@
         return { id: it.product.id, name: it.product.name, price: it.product.price, qty: it.qty };
       }),
       clientTotal: t.total,
-      submittedAt: new Date().toISOString()
+      sheetUrl: targetSheetUrl,
+      submittedAt: new Date().toISOString(),
+      // ফেসবুক পিক্সেল ও ট্র্যাকিং তথ্য (শিটের ডান পাশের সেকশনের জন্য)
+      fbclid: (trk.getFbclid && trk.getFbclid()) || "",
+      fbp: (trk.getFbp && trk.getFbp()) || "",
+      fbc: (trk.getFbc && trk.getFbc()) || "",
+      pixelEvent: "Purchase",
+      campaign: (trk.getCampaign && trk.getCampaign()) || "",
+      adContent: (trk.getAdContent && trk.getAdContent()) || "",
+      source: (trk.getSource && trk.getSource()) || "Direct Visit",
+      sessionId: (trk.getSessionId && trk.getSessionId()) || "",
+      timeSpent: (trk.getTimeSpent && trk.getTimeSpent()) || "১ মিনিট",
+      pageUrl: window.location.href
     };
 
     busy(true);
@@ -854,6 +891,11 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d && d.success) {
+          // ট্র্যাকার আপডেট: অর্ডার সফল হিসেবে চিহ্নিত করা
+          if (typeof window.triggerTrackerOrder === "function") {
+            window.triggerTrackerOrder(d.orderId);
+          }
+
           var okText = "🎉 ধন্যবাদ! আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে।<br>আপনার অর্ডার আইডি: <strong>" + esc(d.orderId) + "</strong> | সর্বমোট বিল: <strong>" + money(d.total) + "</strong>। আমরা অতি দ্রুত আপনার সাথে যোগাযোগ করব।";
           if (C.sheetDemo && C.sheetDemo.url) {
             okText += '<br><a href="' + esc(C.sheetDemo.url) + '" target="_blank" rel="noopener noreferrer" class="order-sheet-link">📊 শিটে আপনার অর্ডারটি সেভ হওয়া এখনই দেখুন ➔</a>';
@@ -891,4 +933,269 @@
       })
       .finally(function () { clearTimeout(to); });
   });
+
+  /* ==========================================================
+     সেশন, বিহেভিয়ার ও ফেসবুক পিক্সেল ট্র্যাকার (Session & Facebook Pixel Tracker)
+     ========================================================== */
+  (function () {
+    var trkConfig = C.tracking || {};
+    var pixConfig = C.pixel || {};
+    if (trkConfig.enabled === false || !C.apiEndpoint) return;
+
+    // কুকি পড়ার হেল্পার
+    function getCookie(name) {
+      try {
+        var m = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, "\\$1") + "=([^;]*)"));
+        return m ? decodeURIComponent(m[1]) : "";
+      } catch (e) { return ""; }
+    }
+
+    // কুকি সেট করার হেল্পার
+    function setCookie(name, val, days) {
+      try {
+        var d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = name + "=" + encodeURIComponent(val) + ";expires=" + d.toUTCString() + ";path=/;SameSite=Lax";
+      } catch (e) {}
+    }
+
+    // ১. ফেসবুক অ্যাডস ট্র্যাকিং প্যারামিটার (fbclid, utm_campaign, utm_content)
+    var urlParams = new URLSearchParams(window.location.search || "");
+    var fbclid = urlParams.get("fbclid") || "";
+    try {
+      if (fbclid) {
+        sessionStorage.setItem("honey_fbclid", fbclid);
+      } else {
+        fbclid = sessionStorage.getItem("honey_fbclid") || "";
+      }
+    } catch (e) {}
+
+    var utmCampaign = urlParams.get("utm_campaign") || "";
+    var utmContent = urlParams.get("utm_content") || urlParams.get("utm_term") || "";
+    try {
+      if (utmCampaign) sessionStorage.setItem("honey_utm_campaign", utmCampaign);
+      else utmCampaign = sessionStorage.getItem("honey_utm_campaign") || "";
+      if (utmContent) sessionStorage.setItem("honey_utm_content", utmContent);
+      else utmContent = sessionStorage.getItem("honey_utm_content") || "";
+    } catch (e) {}
+
+    // ২. ফেসবুক পিক্সেল ব্রাউজার আইডি (_fbp)
+    var fbp = getCookie("_fbp");
+    if (!fbp) {
+      fbp = "fb.1." + Date.now() + "." + Math.floor(Math.random() * 1000000000);
+      setCookie("_fbp", fbp, 90);
+    }
+
+    // ৩. ফেসবুক পিক্সেল ক্লিক কুকি আইডি (_fbc)
+    var fbc = getCookie("_fbc");
+    if (!fbc && fbclid) {
+      fbc = "fb.1." + Date.now() + "." + fbclid;
+      setCookie("_fbc", fbc, 90);
+    }
+
+    // ৪. ফেসবুক পিক্সেল অটো-ইনিশিয়ালাইজ (যদি config.js এ pixelId থাকে)
+    if (pixConfig.enabled && pixConfig.pixelId && !window.fbq) {
+      (function(f,b,e,v,n,t,s){
+        if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s);
+      })(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
+
+      try {
+        fbq('init', pixConfig.pixelId);
+        fbq('track', 'PageView');
+      } catch (pxErr) {}
+    }
+
+    // সেশন আইডি জেনারেট (একই ভিজিটর পেজ রিফ্রেশ করলেও সেশন বজায় থাকে)
+    var sessKey = "honey_session_id";
+    var sessionId = "";
+    try {
+      sessionId = sessionStorage.getItem(sessKey) || "";
+      if (!sessionId) {
+        sessionId = "V-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+        sessionStorage.setItem(sessKey, sessionId);
+      }
+    } catch (e) {
+      sessionId = "V-" + Date.now().toString(36).toUpperCase();
+    }
+
+    var startTime = Date.now();
+    var orderStatus = "না (শুধু ভিজিট)";
+    var latestPixelEvent = "PageView";
+
+    function formatStay(sec) {
+      if (sec < 60) return bn(sec) + " সেকেন্ড";
+      var m = Math.floor(sec / 60);
+      var s = sec % 60;
+      return bn(m) + " মিনিট" + (s > 0 ? " " + bn(s) + " সেকেন্ড" : "");
+    }
+
+    function getSelectedProductsList() {
+      var list = [];
+      if (C.products && state.items) {
+        C.products.forEach(function (p) {
+          var q = state.items[p.id];
+          if (q && q > 0) {
+            list.push(p.name + " (" + bn(q) + "টি)");
+          }
+        });
+      }
+      return list.length > 0 ? list.join(", ") : "কোনো পণ্য সিলেক্ট করেনি";
+    }
+
+    function getTrafficSource() {
+      var ref = document.referrer || "";
+      var search = window.location.search || "";
+      if (fbclid || /fbclid|facebook\.com|fb\.me/i.test(search + " " + ref)) return "Facebook Ads / Post";
+      if (/gclid|google\./i.test(search + " " + ref)) return "Google Ads / Search";
+      if (/utm_source=([^&]+)/i.test(search)) {
+        var m = search.match(/utm_source=([^&]+)/i);
+        return decodeURIComponent(m[1]);
+      }
+      if (ref) {
+        try { return new URL(ref).hostname; } catch (e) { return ref.slice(0, 35); }
+      }
+      return "Direct Visit";
+    }
+
+    // অর্ডার পে-লোডের সাথে পিক্সেল ও ট্র্যাকিং তথ্য মেলানোর গ্লোবাল হেল্পার
+    window.__honeyTracking = {
+      getFbclid: function () { return fbclid || ""; },
+      getFbp: function () { return fbp || ""; },
+      getFbc: function () { return fbc || ""; },
+      getCampaign: function () { return utmCampaign || ""; },
+      getAdContent: function () { return utmContent || ""; },
+      getSource: function () { return getTrafficSource(); },
+      getSessionId: function () { return sessionId || ""; },
+      getTimeSpent: function () {
+        var sec = Math.max(1, Math.round((Date.now() - startTime) / 1000));
+        return formatStay(sec);
+      }
+    };
+
+    function sendTracking(forceOrderInfo, customEvent) {
+      if (forceOrderInfo) {
+        orderStatus = "হ্যাঁ (" + forceOrderInfo + ")";
+        latestPixelEvent = "Purchase";
+      } else if (customEvent) {
+        latestPixelEvent = customEvent;
+      }
+
+      var sec = Math.max(1, Math.round((Date.now() - startTime) / 1000));
+      var phoneInput = $("#phone");
+      var customerPhone = (phoneInput && phoneInput.value.trim()) || "";
+
+      var payload = {
+        action: "track",
+        sessionId: sessionId,
+        stayTime: formatStay(sec),
+        selectedProducts: getSelectedProductsList(),
+        ordered: orderStatus,
+        pixelEvent: latestPixelEvent,
+        phone: customerPhone,
+        fbclid: fbclid,
+        fbp: fbp,
+        fbc: fbc,
+        campaign: utmCampaign,
+        adContent: utmContent,
+        device: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
+        source: getTrafficSource(),
+        pageUrl: window.location.href,
+        trackingSheetUrl: trkConfig.sheetUrl || ""
+      };
+
+      try {
+        var bodyStr = JSON.stringify(payload);
+        if (navigator.sendBeacon && (document.visibilityState === "hidden" || forceOrderInfo)) {
+          navigator.sendBeacon(C.apiEndpoint, bodyStr);
+        } else {
+          fetch(C.apiEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: bodyStr,
+            keepalive: true
+          }).catch(function () {});
+        }
+      } catch (err) {}
+    }
+
+    // গ্লোবাল ফাংশন: অর্ডার সাবমিট সফল হলে সাথে সাথে পিক্সেল Purchase ও ট্র্যাকার আপডেট
+    window.triggerTrackerOrder = function (orderId) {
+      if (window.fbq) {
+        try {
+          var t = calc();
+          fbq('track', 'Purchase', {
+            content_type: 'product',
+            value: t.total,
+            currency: 'BDT'
+          });
+        } catch (e) {}
+      }
+      sendTracking(orderId, "Purchase");
+    };
+
+    // ১. পেজ লোড হওয়ার ৫ সেকেন্ড পর প্রথম লগ পাঠানো
+    setTimeout(function () {
+      sendTracking();
+    }, 5000);
+
+    // ২. নির্দিষ্ট সময় পরপর অটো-আপডেট (ডিফল্ট: প্রতি ৩০ সেকেন্ড)
+    var intervalSec = (trkConfig.heartbeatInterval || 30) * 1000;
+    setInterval(function () {
+      if (document.visibilityState !== "hidden") {
+        sendTracking();
+      }
+    }, intervalSec);
+
+    // ৩. পণ্য সিলেক্ট বা পরিবর্তন করলে ট্র্যাকার ও পিক্সেল AddToCart আপডেট
+    var changeDebounce = null;
+    function onProductChange() {
+      if (window.fbq) {
+        try { fbq('track', 'AddToCart'); } catch (e) {}
+      }
+      clearTimeout(changeDebounce);
+      changeDebounce = setTimeout(function () {
+        sendTracking(null, "AddToCart");
+      }, 2500);
+    }
+    var pkgBox = $("#packages");
+    if (pkgBox) {
+      pkgBox.addEventListener("click", onProductChange);
+    }
+    var sumEl = $("#sumItemsList");
+    if (sumEl) {
+      sumEl.addEventListener("click", onProductChange);
+    }
+
+    // ৪. চেকআউট ফর্মে নাম বা মোবাইল নম্বর টাইপ শুরু করলে InitiateCheckout ইভেন্ট
+    var checkoutTriggered = false;
+    ["name", "phone", "address"].forEach(function (id) {
+      var el = $("#" + id);
+      if (el) {
+        el.addEventListener("focus", function () {
+          if (!checkoutTriggered) {
+            checkoutTriggered = true;
+            if (window.fbq) {
+              try { fbq('track', 'InitiateCheckout'); } catch (e) {}
+            }
+            sendTracking(null, "InitiateCheckout");
+          }
+        }, { once: true });
+      }
+    });
+
+    // ৫. পেজ ছেড়ে যাওয়ার সময় শেষ অবস্থান পাঠানো
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") {
+        sendTracking();
+      }
+    });
+    window.addEventListener("pagehide", function () {
+      sendTracking();
+    });
+  })();
 })();
