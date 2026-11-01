@@ -205,9 +205,10 @@ function onOpen() {
   try {
     var ui = SpreadsheetApp.getUi();
     ui.createMenu("✨ ASCHII SOLUTION")
-      .addItem("🎨 Redesign Sheet (Reference Modern UI)", "redesignOrderSheetUI")
+      .addItem("🎨 Redesign Sheet (Modern Dashboard)", "redesignOrderSheetUI")
       .addItem("📊 Refresh KPI Cards & Formulas", "formatOrderSheetDesign")
       .addSeparator()
+      .addItem("📱 Format Mobile View Tab", "formatMobileViewSheetDesign")
       .addItem("📑 Format Visitors Tracking Tab", "formatTrackingSheetDesign")
       .addToUi();
   } catch (e) {}
@@ -567,19 +568,22 @@ function getSheet_(customUrl) {
  * =========================================================================
  * ৭. ASCHII SOLUTION প্রফেশনাল ডিজাইন ও সাইড-বাই-সাইড CRM ফরম্যাটিং
  * =========================================================================
- * এই ফাংশনটি গুগল শিটকে সরাসরি রেফারেন্স ইমেজের মতো আকর্ষণীয় ও প্রফেশনাল রূপ দেয়:
- * - ওপরে ASCHII SOLUTION ব্র্যান্ডিং এবং ৪টি লাইভ ডায়নামিক KPI কার্ড (Total Orders, Revenue, Completed, Sync)
- * - বাম পাশে: Order Related Information (গ্রিন ব্যানার + ১৪টি কাস্টমার ও অর্ডার কলাম)
- * - ডান পাশে: Pixel Related Information (পার্পল ব্যানার + ১০টি ফেসবুক পিক্সেল ও ট্র্যাকিং কলাম)
- * - ফ্রোজেন হেডার, ফিল্টার, অল্টারনেটিং কালার, কারেন্সি ও স্ট্যাটাস ব্যাজ।
- * - বিদ্যমান সকল অতীত অর্ডার সম্পূর্ণ অক্ষত ও এডিটেবল রেখে সাজানো হয়!
+ * এই ফাংশনটি গুগল শিটকে সরাসরি নতুন রেফারেন্স ড্যাশবোর্ডের মতো আকর্ষণীয় রূপ দেয়:
+ * - ওপরে ক্লিন ব্র্যান্ডিং এবং ৫টি লাইভ ডায়নামিক KPI পিল কার্ড (Orders, Revenue, Completed, Pixel, Sync)
+ * - পাশাপাশি ২টি সুনির্দিষ্ট সেকশন:
+ *   ১. Customer & Order Details (ডিপ টিল এমারেল্ড ব্যানার)
+ *   ২. Pixel & Ads Data (ডিপ মিডনাইট নেভি ব্যানার)
+ * - সফট স্লেট হেডার, অল্টারনেটিং কালার, কারেন্সি, এবং প্রফেশনাল কালার পিল স্ট্যাটাস ব্যাজ।
+ * - মোবাইল অপ্টিমাইজড: কমপ্যাক্ট ফ্রোজেন রো, নিখুঁত কলাম প্রস্থ এবং স্বয়ংক্রিয় "📱 Mobile View" ট্যাব!
+ * =========================================================================
  */
 function formatOrderSheetDesign(optSheet) {
   var sheet = optSheet || getSheet_();
+  var ss = sheet.getParent();
   var numCols = HEADERS.length; // সর্বমোট ২৪টি কলাম
   var lastRow = sheet.getLastRow();
 
-  // ১. বিদ্যমান অর্ডার ডাটা সংরক্ষণ করা (যাতে কোনো পুরনো অর্ডার ডাটা মুছে না যায়)
+  // ১. বিদ্যমান অর্ডার ডাটা সংরক্ষণ করা (যাতে কোনো পুরনো অর্ডার মুছে না যায়)
   var existingOrders = [];
   var isAlreadyRedesigned = false;
 
@@ -593,7 +597,6 @@ function formatOrderSheetDesign(optSheet) {
   }
 
   if (!isAlreadyRedesigned && lastRow > 0) {
-    // পুরানো ফরম্যাটে থাকলে (যেখানে রো ১-এ হেডার ছিল এবং রো ২ থেকে অর্ডার শুরু ছিল)
     var checkRow1 = sheet.getRange(1, 1, 1, Math.min(sheet.getLastColumn(), 5)).getValues()[0];
     var startRow = (String(checkRow1[0]).indexOf("Order ID") > -1) ? 2 : 1;
     if (lastRow >= startRow) {
@@ -609,45 +612,44 @@ function formatOrderSheetDesign(optSheet) {
         }
       }
     }
-    // শিটের পুরানো স্টাইল ও কন্টেন্ট ফ্রেশ করার জন্য ক্লিয়ার করা
     sheet.clear();
   }
 
-  // ২. প্রতিটি কলামের নিখুঁত প্রস্থ (Column Widths)
+  // ২. প্রতিটি কলামের নিখুঁত প্রস্থ (মোবাইল ও পিসির জন্য অপ্টিমাইজড)
   var colWidths = [
     // --- বাম পাশ: অর্ডার তথ্য (১৪টি কলাম) ---
-    140, // A: Order ID
-    165, // B: Date & Time
-    180, // C: Customer Name
-    140, // D: Phone Number
-    135, // E: District / Area
-    260, // F: Full Address
-    270, // G: Ordered Products
-    100, // H: Total Items (Qty)
-    135, // I: Products Subtotal
-    135, // J: Delivery Method
-    125, // K: Delivery Charge
-    150, // L: Grand Total Bill
-    190, // M: Customer Note
-    135, // N: Order Status
+    120, // A: Order ID
+    145, // B: Date & Time
+    150, // C: Customer Name
+    130, // D: Phone Number
+    120, // E: District / Area
+    200, // F: Full Address
+    220, // G: Ordered Products
+    85,  // H: Total Items (Qty)
+    110, // I: Products Subtotal
+    115, // J: Delivery Method
+    105, // K: Delivery Charge
+    125, // L: Grand Total Bill
+    150, // M: Customer Note
+    120, // N: Order Status
     // --- ডান পাশ: ফেসবুক পিক্সেল তথ্য (১০টি কলাম) ---
-    210, // O: FB Click ID (fbclid)
-    170, // P: FB Browser ID (_fbp)
-    180, // Q: FB Cookie ID (_fbc)
-    130, // R: Pixel Event
-    160, // S: Campaign Name
-    150, // T: Ad Content
-    140, // U: Traffic Source
-    140, // V: Session ID
-    120, // W: Time Spent
-    240  // X: Landing Page URL
+    160, // O: FB Click ID (fbclid)
+    140, // P: FB Browser ID (_fbp)
+    140, // Q: FB Cookie ID (_fbc)
+    110, // R: Pixel Event
+    140, // S: Campaign Name
+    130, // T: Ad Content
+    120, // U: Traffic Source
+    120, // V: Session ID
+    100, // W: Time Spent
+    200  // X: Landing Page URL
   ];
 
   for (var w = 0; w < colWidths.length; w++) {
     sheet.setColumnWidth(w + 1, colWidths[w]);
   }
 
-  // ৩. ফিল্টার ও ফ্রোজেন রো আনফ্রিজ করে পুনরায় ফ্রেশভাবে সেট করা
+  // ৩. ফিল্টার ও ফ্রোজেন রো ফ্রেশভাবে সেট করা
   try {
     var existingFilter = sheet.getFilter();
     if (existingFilter) existingFilter.remove();
@@ -655,135 +657,134 @@ function formatOrderSheetDesign(optSheet) {
 
   sheet.setFrozenRows(0);
 
-  // ৪. রো ১ ও ২: শীর্ষ ব্যানার ও ৪টি লাইভ KPI ড্যাশবোর্ড কার্ড তৈরি
-  sheet.setRowHeight(1, 40);
-  sheet.setRowHeight(2, 34);
-
-  // ৪.১: ব্র্যান্ডিং ব্যানার (A1:F2)
-  var brandRange = sheet.getRange("A1:F2");
+  // ৪. রো ১: আধুনিক ক্লিন ব্র্যান্ডিং বার (Row Height: 36px)
+  sheet.setRowHeight(1, 36);
+  var brandRange = sheet.getRange("A1:X1");
   brandRange.merge()
-    .setBackground("#0F172A") // ডিপ নেভি ব্লু
-    .setFontColor("#FFFFFF")
+    .setBackground("#FFFFFF")
+    .setFontColor("#0F172A")
     .setFontFamily("Segoe UI")
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setWrap(true);
-  sheet.getRange("A1").setValue("🌐 ASCHII SOLUTION • Facebook Pixel Tracker\nTrack Customer Orders & Pixel Events in One Place");
+    .setHorizontalAlignment("left")
+    .setVerticalAlignment("middle");
+  sheet.getRange("A1").setValue("  🌐 ASCHII SOLUTION - Facebook Pixel Tracker  •  Track Customer Orders & Pixel Events in One Place");
   sheet.getRange("A1").setFontWeight("bold").setFontSize(11);
 
-  // ৪.২: KPI কার্ড ১ – Total Orders (G1:J2)
-  var kpi1 = sheet.getRange("G1:J2");
+  // ৫. রো ২: ৫টি আধুনিক পিল KPI ড্যাশবোর্ড কার্ড (Row Height: 46px)
+  sheet.setRowHeight(2, 46);
+
+  // কার্ড ১: Total Orders (A2:D2)
+  var kpi1 = sheet.getRange("A2:D2");
   kpi1.merge()
-    .setBackground("#EFF6FF")
+    .setBackground("#F8FAFC")
     .setFontFamily("Segoe UI")
     .setHorizontalAlignment("center")
     .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, false, false, "#BFDBFE", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange("G1").setFormula('="🛒 Total Orders" & CHAR(10) & IFERROR(COUNTA(A5:A), 0)')
+    .setBorder(true, true, true, true, false, false, "#E2E8F0", SpreadsheetApp.BorderStyle.SOLID);
+  sheet.getRange("A2").setFormula('="🛒 Total Orders" & CHAR(10) & IFERROR(COUNTA(A5:A), 0) & "  (Live)"')
     .setFontWeight("bold")
-    .setFontSize(13)
-    .setFontColor("#1E3A8A");
+    .setFontSize(10.5)
+    .setFontColor("#0F172A");
 
-  // ৪.৩: KPI কার্ড ২ – Total Revenue (K1:N2)
-  var kpi2 = sheet.getRange("K1:N2");
+  // কার্ড ২: Total Revenue (E2:I2)
+  var kpi2 = sheet.getRange("E2:I2");
   kpi2.merge()
     .setBackground("#F0FDF4")
     .setFontFamily("Segoe UI")
     .setHorizontalAlignment("center")
     .setVerticalAlignment("middle")
     .setBorder(true, true, true, true, false, false, "#BBF7D0", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange("K1").setFormula('="📈 Total Revenue" & CHAR(10) & "৳ " & TEXT(IFERROR(SUM(L5:L), 0), "#,##0")')
+  sheet.getRange("E2").setFormula('="💵 Total Revenue" & CHAR(10) & "৳ " & TEXT(IFERROR(SUM(L5:L), 0), "#,##0")')
     .setFontWeight("bold")
-    .setFontSize(13)
+    .setFontSize(10.5)
     .setFontColor("#15803D");
 
-  // ৪.৪: KPI কার্ড ৩ – Completed Orders (O1:R2)
-  var kpi3 = sheet.getRange("O1:R2");
+  // কার্ড ৩: Completed Orders (J2:N2)
+  var kpi3 = sheet.getRange("J2:N2");
   kpi3.merge()
     .setBackground("#FEFCE8")
     .setFontFamily("Segoe UI")
     .setHorizontalAlignment("center")
     .setVerticalAlignment("middle")
     .setBorder(true, true, true, true, false, false, "#FEF08A", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange("O1").setFormula('="📊 Completed Orders" & CHAR(10) & IFERROR(COUNTIF(N5:N, "Delivered") + COUNTIF(N5:N, "Completed"), 0)')
+  sheet.getRange("J2").setFormula('="📊 Completed Orders" & CHAR(10) & IFERROR(COUNTIF(N5:N, "Delivered") + COUNTIF(N5:N, "Completed") + COUNTIF(N5:N, "Shipped"), 0) & "  (" & IFERROR(TEXT((COUNTIF(N5:N, "Delivered") + COUNTIF(N5:N, "Completed") + COUNTIF(N5:N, "Shipped")) / MAX(1, COUNTA(A5:A)), "0%"), "0%") & ")"')
     .setFontWeight("bold")
-    .setFontSize(13)
+    .setFontSize(10.5)
     .setFontColor("#A16207");
 
-  // ৪.৫: KPI কার্ড ৪ – Live Realtime Sync (S1:X2)
-  var kpi4 = sheet.getRange("S1:X2");
+  // কার্ড ৪: Pixel Event (O2:S2)
+  var kpi4 = sheet.getRange("O2:S2");
   kpi4.merge()
-    .setBackground("#F5F3FF")
+    .setBackground("#EFF6FF")
     .setFontFamily("Segoe UI")
     .setHorizontalAlignment("center")
     .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, false, false, "#DDD6FE", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange("S1").setFormula('="📅 Live Realtime Sync" & CHAR(10) & TEXT(NOW(), "mmm dd, yyyy hh:mm AM/PM")')
+    .setBorder(true, true, true, true, false, false, "#BFDBFE", SpreadsheetApp.BorderStyle.SOLID);
+  sheet.getRange("O2").setFormula('="🎯 Pixel Event" & CHAR(10) & "Purchases: " & IFERROR(COUNTIF(R5:R, "Purchase"), 0) & " | Active"')
     .setFontWeight("bold")
-    .setFontSize(11)
-    .setFontColor("#6D28D9");
+    .setFontSize(10.5)
+    .setFontColor("#1D4ED8");
 
-  // ৫. রো ৩: সেকশন ব্যানার হেডার (Order Related Information & Pixel Related Information)
-  sheet.setRowHeight(3, 34);
+  // কার্ড ৫: Live Real-time Sync (T2:X2)
+  var kpi5 = sheet.getRange("T2:X2");
+  kpi5.merge()
+    .setBackground("#F0FDF4")
+    .setFontFamily("Segoe UI")
+    .setHorizontalAlignment("center")
+    .setVerticalAlignment("middle")
+    .setBorder(true, true, true, true, false, false, "#BBF7D0", SpreadsheetApp.BorderStyle.SOLID);
+  sheet.getRange("T2").setFormula('="🟢 Live Real-time Sync" & CHAR(10) & TEXT(NOW(), "mmm dd, yyyy hh:mm AM/PM")')
+    .setFontWeight("bold")
+    .setFontSize(10)
+    .setFontColor("#166534");
 
-  // ৫.১: বাম পাশের সেকশন হেডার (A3:N3)
+  // ৬. রো ৩: সেকশন ব্যানার (Row Height: 30px)
+  sheet.setRowHeight(3, 30);
+
+  // ৬.১: বাম পাশের সেকশন হেডার (A3:N3)
   var orderSection = sheet.getRange("A3:N3");
   orderSection.merge()
-    .setBackground("#064E3B") // গাঢ় এমারেল্ড গ্রিন
+    .setBackground("#0D4A47") // ডিপ টিল এমারেল্ড
     .setFontColor("#FFFFFF")
     .setFontFamily("Segoe UI")
     .setFontWeight("bold")
     .setFontSize(11)
-    .setHorizontalAlignment("left")
+    .setHorizontalAlignment("center")
     .setVerticalAlignment("middle");
-  sheet.getRange("A3").setValue("  🛒 Order Related Information                                                    Customer & Order Details");
+  sheet.getRange("A3").setValue("Customer & Order Details");
 
-  // ৫.২: ডান পাশের সেকশন হেডার (O3:X3)
+  // ৬.২: ডান পাশের সেকশন হেডার (O3:X3)
   var pixelSection = sheet.getRange("O3:X3");
   pixelSection.merge()
-    .setBackground("#312E81") // গাঢ় ইন্ডিগো পার্পল
+    .setBackground("#0F172A") // ডিপ মিডনাইট নেভি
     .setFontColor("#FFFFFF")
     .setFontFamily("Segoe UI")
     .setFontWeight("bold")
     .setFontSize(11)
-    .setHorizontalAlignment("left")
+    .setHorizontalAlignment("center")
     .setVerticalAlignment("middle");
-  sheet.getRange("O3").setValue("  </> Pixel Related Information                                                 Facebook Pixel & Ads Data");
+  sheet.getRange("O3").setValue("Pixel & Ads Data");
 
-  // ৬. রো ৪: কলাম হেডার
-  sheet.setRowHeight(4, 38);
+  // ৭. রো ৪: কলাম হেডার (Row Height: 34px)
+  sheet.setRowHeight(4, 34);
 
-  // ৬.১: অর্ডার কলাম হেডার (A4:N4)
-  var orderHeadersRange = sheet.getRange(4, 1, 1, ORDER_HEADERS.length);
-  orderHeadersRange.setValues([ORDER_HEADERS])
-    .setBackground("#D1E7DD") // সফট ফ্রেশ মিন্ট
-    .setFontColor("#064E3B")
+  var allHeadersRange = sheet.getRange(4, 1, 1, numCols);
+  allHeadersRange.setValues([HEADERS])
+    .setBackground("#F1F5F9") // সফট লাইট স্লেট
+    .setFontColor("#1E293B")
     .setFontFamily("Segoe UI")
     .setFontWeight("bold")
-    .setFontSize(10.5)
+    .setFontSize(10)
     .setHorizontalAlignment("center")
     .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, true, true, "#A3E635", SpreadsheetApp.BorderStyle.SOLID);
+    .setBorder(true, true, true, true, true, true, "#CBD5E1", SpreadsheetApp.BorderStyle.SOLID);
 
-  // ৬.২: পিক্সেল কলাম হেডার (O4:X4)
-  var pixelHeadersRange = sheet.getRange(4, ORDER_HEADERS.length + 1, 1, PIXEL_HEADERS.length);
-  pixelHeadersRange.setValues([PIXEL_HEADERS])
-    .setBackground("#EDE9FE") // সফট ল্যাভেন্ডার পার্পল
-    .setFontColor("#312E81")
-    .setFontFamily("Segoe UI")
-    .setFontWeight("bold")
-    .setFontSize(10.5)
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, true, true, "#C7D2FE", SpreadsheetApp.BorderStyle.SOLID);
-
-  // ৭. সংরক্ষিত পূর্বের অর্ডারগুলো রো ৫ থেকে পুনরায় শিটে যোগ করা
+  // ৮. সংরক্ষিত পূর্বের অর্ডারগুলো রো ৫ থেকে যোগ করা
   if (existingOrders.length > 0) {
     sheet.getRange(5, 1, existingOrders.length, numCols).setValues(existingOrders);
   }
 
-  // ৮. ফ্রোজেন রো ও ফিল্টার সেট করা
-  sheet.setFrozenRows(4); // রো ১ থেকে ৪ স্ক্রল করার সময় স্ক্রিনে স্থায়ী থাকবে
+  // ৯. ফ্রোজেন রো (মোবাইলে স্ক্রিন জ্যাম না করে মাত্র ৪টি রো ফ্রোজেন)
+  sheet.setFrozenRows(4);
 
   var finalLastRow = Math.max(5, sheet.getLastRow());
 
@@ -791,17 +792,20 @@ function formatOrderSheetDesign(optSheet) {
     sheet.getRange(4, 1, finalLastRow, numCols).createFilter();
   } catch (fe) {}
 
-  // ৯. সকল ডাটা রো প্রফেশনাল ফরম্যাটিং করা (রো ৫ থেকে শেষ রো পর্যন্ত)
+  // ১০. সকল ডাটা রো ফরম্যাটিং করা (রো ৫ থেকে শেষ রো পর্যন্ত)
   if (finalLastRow >= 5) {
     for (var r = 5; r <= finalLastRow; r++) {
       formatSingleRow_(sheet, r);
     }
   }
 
-  // ১০. স্ট্যাটাস ও পিক্সেল ব্যাজের জন্য কন্ডিশনাল ফরম্যাটিং রুলস
+  // ১১. স্ট্যাটাস ও পিক্সেল ব্যাজের জন্য কন্ডিশনাল ফরম্যাটিং রুলস
   setupStatusConditionalFormatting_(sheet);
 
-  return "ASCHII SOLUTION প্রফেশনাল ডিজাইন সফলভাবে সম্পন্ন হয়েছে!";
+  // ১২. মোবাইল ভিউ ট্যাব তৈরি বা আপডেট করা
+  formatMobileViewSheetDesign(ss);
+
+  return "ASCHII SOLUTION প্রফেশনাল ডিজাইন ও মোবাইল ভিউ সফলভাবে সম্পন্ন হয়েছে!";
 }
 
 /**
@@ -817,24 +821,32 @@ function setupStatusConditionalFormatting_(sheet) {
     rules.push(
       SpreadsheetApp.newConditionalFormatRule()
         .whenTextEqualTo("Delivered")
-        .setBackground("#D1FAE5")
-        .setFontColor("#065F46")
+        .setBackground("#DCFCE7")
+        .setFontColor("#15803D")
         .setRanges([statusColRange])
         .build()
     );
     rules.push(
       SpreadsheetApp.newConditionalFormatRule()
         .whenTextEqualTo("Completed")
-        .setBackground("#D1FAE5")
-        .setFontColor("#065F46")
+        .setBackground("#DCFCE7")
+        .setFontColor("#15803D")
+        .setRanges([statusColRange])
+        .build()
+    );
+    rules.push(
+      SpreadsheetApp.newConditionalFormatRule()
+        .whenTextEqualTo("Shipped")
+        .setBackground("#DBEAFE")
+        .setFontColor("#1D4ED8")
         .setRanges([statusColRange])
         .build()
     );
     rules.push(
       SpreadsheetApp.newConditionalFormatRule()
         .whenTextEqualTo("Processing")
-        .setBackground("#DBEAFE")
-        .setFontColor("#1E40AF")
+        .setBackground("#E0E7FF")
+        .setFontColor("#4338CA")
         .setRanges([statusColRange])
         .build()
     );
@@ -842,7 +854,7 @@ function setupStatusConditionalFormatting_(sheet) {
       SpreadsheetApp.newConditionalFormatRule()
         .whenTextEqualTo("Pending")
         .setBackground("#FEF3C7")
-        .setFontColor("#92400E")
+        .setFontColor("#B45309")
         .setRanges([statusColRange])
         .build()
     );
@@ -850,7 +862,7 @@ function setupStatusConditionalFormatting_(sheet) {
       SpreadsheetApp.newConditionalFormatRule()
         .whenTextEqualTo("New")
         .setBackground("#FEF3C7")
-        .setFontColor("#92400E")
+        .setFontColor("#B45309")
         .setRanges([statusColRange])
         .build()
     );
@@ -858,7 +870,7 @@ function setupStatusConditionalFormatting_(sheet) {
       SpreadsheetApp.newConditionalFormatRule()
         .whenTextEqualTo("Cancelled")
         .setBackground("#FEE2E2")
-        .setFontColor("#991B1B")
+        .setFontColor("#B91C1C")
         .setRanges([statusColRange])
         .build()
     );
@@ -876,7 +888,7 @@ function setupStatusConditionalFormatting_(sheet) {
       SpreadsheetApp.newConditionalFormatRule()
         .whenTextEqualTo("InitiateCheckout")
         .setBackground("#DBEAFE")
-        .setFontColor("#1E40AF")
+        .setFontColor("#1D4ED8")
         .setRanges([pixelColRange])
         .build()
     );
@@ -907,12 +919,12 @@ function setupStatusConditionalFormatting_(sheet) {
 function formatSingleRow_(sheet, rowIndex) {
   try {
     var numCols = HEADERS.length; // 24
-    sheet.setRowHeight(rowIndex, 33);
+    sheet.setRowHeight(rowIndex, 32);
 
     var rowRange = sheet.getRange(rowIndex, 1, 1, numCols);
     rowRange
       .setFontFamily("Segoe UI")
-      .setFontSize(10)
+      .setFontSize(9.5)
       .setVerticalAlignment("middle")
       .setBorder(
         true,
@@ -941,7 +953,11 @@ function formatSingleRow_(sheet, rowIndex) {
     sheet.getRange(rowIndex, 6).setHorizontalAlignment("left").setWrap(true); // Full Address
     sheet.getRange(rowIndex, 7).setHorizontalAlignment("left").setWrap(true); // Ordered Products
     sheet.getRange(rowIndex, 8).setHorizontalAlignment("center").setFontWeight("bold"); // Items Qty
-    sheet.getRange(rowIndex, 9).setHorizontalAlignment("right").setNumberFormat('"৳"#,##0'); // Products Subtotal
+    
+    // Products Subtotal (সফট লাইট গ্রিন ব্যাকগ্রাউন্ড)
+    var subtotalCell = sheet.getRange(rowIndex, 9);
+    subtotalCell.setHorizontalAlignment("right").setBackground("#F0FDF4").setNumberFormat('"৳"#,##0');
+    
     sheet.getRange(rowIndex, 10).setHorizontalAlignment("center"); // Delivery Method
     sheet.getRange(rowIndex, 11).setHorizontalAlignment("right").setNumberFormat('"৳"#,##0'); // Delivery Charge
 
@@ -950,7 +966,7 @@ function formatSingleRow_(sheet, rowIndex) {
     grandTotalCell
       .setHorizontalAlignment("right")
       .setFontWeight("bold")
-      .setFontColor("#064E3B")
+      .setFontColor("#15803D")
       .setBackground("#DCFCE7")
       .setNumberFormat('"৳"#,##0');
 
@@ -960,7 +976,7 @@ function formatSingleRow_(sheet, rowIndex) {
     var statusCell = sheet.getRange(rowIndex, 14);
     statusCell.setHorizontalAlignment("center").setFontWeight("bold");
     var validationRule = SpreadsheetApp.newDataValidation()
-      .requireValueInList(["Completed", "Delivered", "Processing", "Pending", "New", "Cancelled"], true)
+      .requireValueInList(["Completed", "Shipped", "Delivered", "Processing", "Pending", "New", "Cancelled"], true)
       .setAllowInvalid(true)
       .build();
     statusCell.setDataValidation(validationRule);
@@ -977,6 +993,85 @@ function formatSingleRow_(sheet, rowIndex) {
     sheet.getRange(rowIndex, 23).setHorizontalAlignment("center"); // Time Spent
     sheet.getRange(rowIndex, 24).setHorizontalAlignment("left"); // Landing Page URL
   } catch (err) {}
+}
+
+/**
+ * মোবাইল ফোনের জন্য বিশেষ ১-ক্লিক কুইক ভিউ ট্যাব (Mobile Optimized View)
+ */
+function formatMobileViewSheetDesign(ss) {
+  try {
+    var tabName = "📱 Mobile View";
+    var mobSheet = ss.getSheetByName(tabName);
+    if (!mobSheet) {
+      mobSheet = ss.insertSheet(tabName);
+    }
+
+    var widths = [110, 135, 140, 130, 120, 115];
+    for (var i = 0; i < widths.length; i++) {
+      mobSheet.setColumnWidth(i + 1, widths[i]);
+    }
+
+    mobSheet.setFrozenRows(0);
+    mobSheet.setRowHeight(1, 34);
+    mobSheet.setRowHeight(2, 40);
+    mobSheet.setRowHeight(3, 32);
+
+    // রো ১: মোবাইল হেডার
+    var mBrand = mobSheet.getRange("A1:F1");
+    mBrand.merge()
+      .setBackground("#0F172A")
+      .setFontColor("#FFFFFF")
+      .setFontFamily("Segoe UI")
+      .setFontWeight("bold")
+      .setFontSize(11)
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle");
+    mobSheet.getRange("A1").setValue("📱 ASCHII SOLUTION • Mobile Quick Orders View");
+
+    // রো ২: মোবাইল KPI
+    var mKpi1 = mobSheet.getRange("A2:C2");
+    mKpi1.merge()
+      .setBackground("#EFF6FF")
+      .setFontFamily("Segoe UI")
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle")
+      .setBorder(true, true, true, true, false, false, "#BFDBFE", SpreadsheetApp.BorderStyle.SOLID);
+    mobSheet.getRange("A2").setFormula('="🛒 Total Orders: " & IFERROR(COUNTA(Orders!A5:A), 0)')
+      .setFontWeight("bold").setFontSize(10.5).setFontColor("#1E3A8A");
+
+    var mKpi2 = mobSheet.getRange("D2:F2");
+    mKpi2.merge()
+      .setBackground("#F0FDF4")
+      .setFontFamily("Segoe UI")
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle")
+      .setBorder(true, true, true, true, false, false, "#BBF7D0", SpreadsheetApp.BorderStyle.SOLID);
+    mobSheet.getRange("D2").setFormula('="💵 Revenue: ৳ " & TEXT(IFERROR(SUM(Orders!L5:L), 0), "#,##0")')
+      .setFontWeight("bold").setFontSize(10.5).setFontColor("#15803D");
+
+    // রো ৩: কলাম হেডার
+    var mobHeaders = ["Order ID", "Date & Time", "Customer Name", "Phone Number", "Total Bill", "Order Status"];
+    var mHeadRange = mobSheet.getRange("A3:F3");
+    mHeadRange.setValues([mobHeaders])
+      .setBackground("#F1F5F9")
+      .setFontColor("#1E293B")
+      .setFontFamily("Segoe UI")
+      .setFontWeight("bold")
+      .setFontSize(10)
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle")
+      .setBorder(true, true, true, true, true, true, "#CBD5E1", SpreadsheetApp.BorderStyle.SOLID);
+
+    // রো ৪: ডাটা ডায়নামিকালি অর্ডার শিট থেকে লিঙ্ক করা
+    mobSheet.getRange("A4").setFormula('=IFERROR(Orders!A5:A, "")');
+    mobSheet.getRange("B4").setFormula('=IFERROR(Orders!B5:B, "")');
+    mobSheet.getRange("C4").setFormula('=IFERROR(Orders!C5:C, "")');
+    mobSheet.getRange("D4").setFormula('=IFERROR(Orders!D5:D, "")');
+    mobSheet.getRange("E4").setFormula('=IFERROR(Orders!L5:L, "")');
+    mobSheet.getRange("F4").setFormula('=IFERROR(Orders!N5:N, "")');
+
+    mobSheet.setFrozenRows(3);
+  } catch (mErr) {}
 }
 
 /**
