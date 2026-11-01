@@ -208,6 +208,15 @@ function onOpen() {
       .addItem("🎨 Redesign Sheet (Modern Dashboard)", "redesignOrderSheetUI")
       .addItem("📊 Refresh KPI Cards & Formulas", "formatOrderSheetDesign")
       .addSeparator()
+      .addSubMenu(ui.createMenu("📅 Date-wise Filters (তারিখ ফিল্টার)")
+        .addItem("📌 আজকের অর্ডার (Today's Orders)", "filterOrdersToday")
+        .addItem("📌 গতকালের অর্ডার (Yesterday's Orders)", "filterOrdersYesterday")
+        .addItem("📌 চলতি মাসের অর্ডার (This Month)", "filterOrdersThisMonth")
+        .addItem("📌 নির্দিষ্ট তারিখ ফিল্টার (Custom Date)", "filterOrdersCustomDate")
+        .addSeparator()
+        .addItem("🔄 সব অর্ডার দেখুন (Show All Orders)", "clearOrderFilter"))
+      .addSeparator()
+      .addItem("📅 Format Date Report Tab", "formatDateReportSheetDesign")
       .addItem("📱 Format Mobile View Tab", "formatMobileViewSheetDesign")
       .addItem("📑 Format Visitors Tracking Tab", "formatTrackingSheetDesign")
       .addToUi();
@@ -580,44 +589,46 @@ function getSheet_(customUrl) {
 function formatOrderSheetDesign(optSheet) {
   var sheet = optSheet || getSheet_();
   var ss = sheet.getParent();
-  var numCols = HEADERS.length; // সর্বমোট ২৪টি কলাম
+  var numCols = HEADERS.length; // 24
   var lastRow = sheet.getLastRow();
+  var lastCol = Math.max(numCols, sheet.getLastColumn() || 1);
 
-  // ১. বিদ্যমান অর্ডার ডাটা সংরক্ষণ করা (যাতে কোনো পুরনো অর্ডার মুছে না যায়)
+  // ১. সকল বিদ্যমান আসল অর্ডার ডাটা নিরাপদভাবে রিড ও সেভ করা (যাতে কোনো ডাটা না হারায়)
   var existingOrders = [];
-  var isAlreadyRedesigned = false;
 
-  if (lastRow >= 4) {
-    try {
-      var checkRow4 = sheet.getRange(4, 1, 1, Math.min(sheet.getLastColumn(), 5)).getValues()[0];
-      if (String(checkRow4[0]).indexOf("Order ID") > -1) {
-        isAlreadyRedesigned = true;
-      }
-    } catch (e) {}
-  }
-
-  if (!isAlreadyRedesigned && lastRow > 0) {
-    var checkRow1 = sheet.getRange(1, 1, 1, Math.min(sheet.getLastColumn(), 5)).getValues()[0];
-    var startRow = (String(checkRow1[0]).indexOf("Order ID") > -1) ? 2 : 1;
-    if (lastRow >= startRow) {
-      var rawData = sheet.getRange(startRow, 1, lastRow - startRow + 1, sheet.getLastColumn()).getValues();
-      for (var r = 0; r < rawData.length; r++) {
-        var rowVal = rawData[r];
-        if (rowVal[0] || rowVal[2]) {
-          var paddedRow = [];
-          for (var c = 0; c < numCols; c++) {
-            paddedRow.push(c < rowVal.length ? rowVal[c] : "-");
-          }
-          existingOrders.push(paddedRow);
+  if (lastRow > 0) {
+    var allData = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+    for (var r = 0; r < allData.length; r++) {
+      var row = allData[r];
+      var col0 = String(row[0] || "").trim();
+      var col2 = String(row[2] || "").trim(); // Customer Name
+      var isHeaderOrBanner = 
+        col0.indexOf("ASCHII") > -1 || 
+        col0.indexOf("Order ID") > -1 || 
+        col0.indexOf("Customer") > -1 || 
+        col0.indexOf("Total Orders") > -1;
+      
+      if (!isHeaderOrBanner && (col0.indexOf("HN-") === 0 || col0.indexOf("ORD-") === 0 || (r >= 3 && col2.length > 0))) {
+        var padded = [];
+        for (var c = 0; c < numCols; c++) {
+          padded.push(c < row.length ? row[c] : "-");
         }
+        existingOrders.push(padded);
       }
     }
-    sheet.clear();
   }
 
-  // ২. প্রতিটি কলামের নিখুঁত প্রস্থ (মোবাইল ও পিসির জন্য অপ্টিমাইজড)
+  // ২. পুরানো সব মার্জ, ফিল্টার এবং স্টাইল ক্লিয়ার করা যাতে ফ্রেশ নতুন ডিজাইন বসে
+  try {
+    var curFilter = sheet.getFilter();
+    if (curFilter) curFilter.remove();
+  } catch (fe) {}
+
+  sheet.setFrozenRows(0);
+  sheet.clear();
+
+  // ৩. প্রতিটি কলামের নিখুঁত প্রস্থ (Column Widths)
   var colWidths = [
-    // --- বাম পাশ: অর্ডার তথ্য (১৪টি কলাম) ---
     120, // A: Order ID
     145, // B: Date & Time
     150, // C: Customer Name
@@ -632,7 +643,6 @@ function formatOrderSheetDesign(optSheet) {
     125, // L: Grand Total Bill
     150, // M: Customer Note
     120, // N: Order Status
-    // --- ডান পাশ: ফেসবুক পিক্সেল তথ্য (১০টি কলাম) ---
     160, // O: FB Click ID (fbclid)
     140, // P: FB Browser ID (_fbp)
     140, // Q: FB Cookie ID (_fbc)
@@ -649,15 +659,7 @@ function formatOrderSheetDesign(optSheet) {
     sheet.setColumnWidth(w + 1, colWidths[w]);
   }
 
-  // ৩. ফিল্টার ও ফ্রোজেন রো ফ্রেশভাবে সেট করা
-  try {
-    var existingFilter = sheet.getFilter();
-    if (existingFilter) existingFilter.remove();
-  } catch (fltErr) {}
-
-  sheet.setFrozenRows(0);
-
-  // ৪. রো ১: আধুনিক ক্লিন ব্র্যান্ডিং বার (Row Height: 36px)
+  // ৪. রো ১: আধুনিক ক্লিন হোয়াইট ব্র্যান্ডিং বার (Row Height: 36px)
   sheet.setRowHeight(1, 36);
   var brandRange = sheet.getRange("A1:X1");
   brandRange.merge()
@@ -681,9 +683,7 @@ function formatOrderSheetDesign(optSheet) {
     .setVerticalAlignment("middle")
     .setBorder(true, true, true, true, false, false, "#E2E8F0", SpreadsheetApp.BorderStyle.SOLID);
   sheet.getRange("A2").setFormula('="🛒 Total Orders" & CHAR(10) & IFERROR(COUNTA(A5:A), 0) & "  (Live)"')
-    .setFontWeight("bold")
-    .setFontSize(10.5)
-    .setFontColor("#0F172A");
+    .setFontWeight("bold").setFontSize(10.5).setFontColor("#0F172A");
 
   // কার্ড ২: Total Revenue (E2:I2)
   var kpi2 = sheet.getRange("E2:I2");
@@ -694,9 +694,7 @@ function formatOrderSheetDesign(optSheet) {
     .setVerticalAlignment("middle")
     .setBorder(true, true, true, true, false, false, "#BBF7D0", SpreadsheetApp.BorderStyle.SOLID);
   sheet.getRange("E2").setFormula('="💵 Total Revenue" & CHAR(10) & "৳ " & TEXT(IFERROR(SUM(L5:L), 0), "#,##0")')
-    .setFontWeight("bold")
-    .setFontSize(10.5)
-    .setFontColor("#15803D");
+    .setFontWeight("bold").setFontSize(10.5).setFontColor("#15803D");
 
   // কার্ড ৩: Completed Orders (J2:N2)
   var kpi3 = sheet.getRange("J2:N2");
@@ -707,9 +705,7 @@ function formatOrderSheetDesign(optSheet) {
     .setVerticalAlignment("middle")
     .setBorder(true, true, true, true, false, false, "#FEF08A", SpreadsheetApp.BorderStyle.SOLID);
   sheet.getRange("J2").setFormula('="📊 Completed Orders" & CHAR(10) & IFERROR(COUNTIF(N5:N, "Delivered") + COUNTIF(N5:N, "Completed") + COUNTIF(N5:N, "Shipped"), 0) & "  (" & IFERROR(TEXT((COUNTIF(N5:N, "Delivered") + COUNTIF(N5:N, "Completed") + COUNTIF(N5:N, "Shipped")) / MAX(1, COUNTA(A5:A)), "0%"), "0%") & ")"')
-    .setFontWeight("bold")
-    .setFontSize(10.5)
-    .setFontColor("#A16207");
+    .setFontWeight("bold").setFontSize(10.5).setFontColor("#A16207");
 
   // কার্ড ৪: Pixel Event (O2:S2)
   var kpi4 = sheet.getRange("O2:S2");
@@ -720,9 +716,7 @@ function formatOrderSheetDesign(optSheet) {
     .setVerticalAlignment("middle")
     .setBorder(true, true, true, true, false, false, "#BFDBFE", SpreadsheetApp.BorderStyle.SOLID);
   sheet.getRange("O2").setFormula('="🎯 Pixel Event" & CHAR(10) & "Purchases: " & IFERROR(COUNTIF(R5:R, "Purchase"), 0) & " | Active"')
-    .setFontWeight("bold")
-    .setFontSize(10.5)
-    .setFontColor("#1D4ED8");
+    .setFontWeight("bold").setFontSize(10.5).setFontColor("#1D4ED8");
 
   // কার্ড ৫: Live Real-time Sync (T2:X2)
   var kpi5 = sheet.getRange("T2:X2");
@@ -733,9 +727,7 @@ function formatOrderSheetDesign(optSheet) {
     .setVerticalAlignment("middle")
     .setBorder(true, true, true, true, false, false, "#BBF7D0", SpreadsheetApp.BorderStyle.SOLID);
   sheet.getRange("T2").setFormula('="🟢 Live Real-time Sync" & CHAR(10) & TEXT(NOW(), "mmm dd, yyyy hh:mm AM/PM")')
-    .setFontWeight("bold")
-    .setFontSize(10)
-    .setFontColor("#166534");
+    .setFontWeight("bold").setFontSize(10).setFontColor("#166534");
 
   // ৬. রো ৩: সেকশন ব্যানার (Row Height: 30px)
   sheet.setRowHeight(3, 30);
@@ -743,7 +735,7 @@ function formatOrderSheetDesign(optSheet) {
   // ৬.১: বাম পাশের সেকশন হেডার (A3:N3)
   var orderSection = sheet.getRange("A3:N3");
   orderSection.merge()
-    .setBackground("#0D4A47") // ডিপ টিল এমারেল্ড
+    .setBackground("#0D4A47")
     .setFontColor("#FFFFFF")
     .setFontFamily("Segoe UI")
     .setFontWeight("bold")
@@ -755,7 +747,7 @@ function formatOrderSheetDesign(optSheet) {
   // ৬.২: ডান পাশের সেকশন হেডার (O3:X3)
   var pixelSection = sheet.getRange("O3:X3");
   pixelSection.merge()
-    .setBackground("#0F172A") // ডিপ মিডনাইট নেভি
+    .setBackground("#0F172A")
     .setFontColor("#FFFFFF")
     .setFontFamily("Segoe UI")
     .setFontWeight("bold")
@@ -769,7 +761,7 @@ function formatOrderSheetDesign(optSheet) {
 
   var allHeadersRange = sheet.getRange(4, 1, 1, numCols);
   allHeadersRange.setValues([HEADERS])
-    .setBackground("#F1F5F9") // সফট লাইট স্লেট
+    .setBackground("#F1F5F9")
     .setFontColor("#1E293B")
     .setFontFamily("Segoe UI")
     .setFontWeight("bold")
@@ -778,7 +770,7 @@ function formatOrderSheetDesign(optSheet) {
     .setVerticalAlignment("middle")
     .setBorder(true, true, true, true, true, true, "#CBD5E1", SpreadsheetApp.BorderStyle.SOLID);
 
-  // ৮. সংরক্ষিত পূর্বের অর্ডারগুলো রো ৫ থেকে যোগ করা
+  // ৮. সংরক্ষিত পূর্বের আসল অর্ডারগুলো রো ৫ থেকে যোগ করা
   if (existingOrders.length > 0) {
     sheet.getRange(5, 1, existingOrders.length, numCols).setValues(existingOrders);
   }
@@ -802,15 +794,14 @@ function formatOrderSheetDesign(optSheet) {
   // ১১. স্ট্যাটাস ও পিক্সেল ব্যাজের জন্য কন্ডিশনাল ফরম্যাটিং রুলস
   setupStatusConditionalFormatting_(sheet);
 
-  // ১২. মোবাইল ভিউ ট্যাব তৈরি বা আপডেট করা
+  // ১২. মোবাইল ভিউ ও ডেট রিপোর্ট ট্যাব তৈরি বা আপডেট করা
   formatMobileViewSheetDesign(ss);
+  formatDateReportSheetDesign(ss);
 
-  return "ASCHII SOLUTION প্রফেশনাল ডিজাইন ও মোবাইল ভিউ সফলভাবে সম্পন্ন হয়েছে!";
+  return "ASCHII SOLUTION প্রফেশনাল ডিজাইন, ডেট ফিল্টার ও মোবাইল ভিউ সফলভাবে সম্পন্ন হয়েছে!";
 }
 
-/**
- * স্ট্যাটাস কালার ও পিক্সেল ইভেন্ট কন্ডিশনাল ব্যাজ রুলস
- */
+
 function setupStatusConditionalFormatting_(sheet) {
   try {
     var statusColRange = sheet.getRange("N5:N1000");
@@ -1072,6 +1063,162 @@ function formatMobileViewSheetDesign(ss) {
 
     mobSheet.setFrozenRows(3);
   } catch (mErr) {}
+}
+
+/**
+ * তারিখ অনুযায়ী ফিল্টার ও রিপোর্ট দেখার বিশেষ ট্যাব (Date-wise Report Tab)
+ */
+function formatDateReportSheetDesign(ss) {
+  try {
+    var parentSs = ss || SpreadsheetApp.getActiveSpreadsheet() || getSheet_().getParent();
+    var tabName = "📅 Date Report";
+    var rSheet = parentSs.getSheetByName(tabName);
+    if (!rSheet) {
+      rSheet = parentSs.insertSheet(tabName);
+    }
+
+    var widths = [120, 145, 160, 130, 130, 125];
+    for (var i = 0; i < widths.length; i++) {
+      rSheet.setColumnWidth(i + 1, widths[i]);
+    }
+
+    rSheet.setFrozenRows(0);
+    rSheet.setRowHeight(1, 36);
+    rSheet.setRowHeight(2, 42);
+    rSheet.setRowHeight(3, 12);
+    rSheet.setRowHeight(4, 34);
+
+    // রো ১: ব্যানার
+    var titleRange = rSheet.getRange("A1:F1");
+    titleRange.merge()
+      .setBackground("#0F172A")
+      .setFontColor("#FFFFFF")
+      .setFontFamily("Segoe UI")
+      .setFontWeight("bold")
+      .setFontSize(11)
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle");
+    rSheet.getRange("A1").setValue("📅 ASCHII SOLUTION • Interactive Date-wise Order Report");
+
+    // রো ২: তারিখ বাছার ইন্টারেক্টিভ বক্স
+    rSheet.getRange("A2").setValue("📅 তারিখ বাছুন:")
+      .setFontFamily("Segoe UI").setFontWeight("bold").setHorizontalAlignment("right").setVerticalAlignment("middle").setFontColor("#334155");
+
+    var dateCell = rSheet.getRange("B2");
+    if (!dateCell.getValue()) {
+      dateCell.setValue(new Date());
+    }
+    dateCell.setNumberFormat("dd-mmm-yyyy")
+      .setBackground("#FEF3C7")
+      .setFontWeight("bold")
+      .setFontColor("#92400E")
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle");
+
+    rSheet.getRange("C2").setValue("মোট অর্ডার:")
+      .setFontFamily("Segoe UI").setFontWeight("bold").setHorizontalAlignment("right").setVerticalAlignment("middle").setFontColor("#334155");
+
+    rSheet.getRange("D2").setFormula('="🛒 " & IFERROR(COUNTA(A5:A), 0)')
+      .setBackground("#EFF6FF").setFontWeight("bold").setFontColor("#1E3A8A").setHorizontalAlignment("center").setVerticalAlignment("middle");
+
+    rSheet.getRange("E2").setValue("মোট বিক্রয়:")
+      .setFontFamily("Segoe UI").setFontWeight("bold").setHorizontalAlignment("right").setVerticalAlignment("middle").setFontColor("#334155");
+
+    rSheet.getRange("F2").setFormula('="৳ " & TEXT(IFERROR(SUM(E5:E), 0), "#,##0")')
+      .setBackground("#F0FDF4").setFontWeight("bold").setFontColor("#15803D").setHorizontalAlignment("center").setVerticalAlignment("middle");
+
+    rSheet.getRange("A2:F2").setBorder(true, true, true, true, true, true, "#CBD5E1", SpreadsheetApp.BorderStyle.SOLID);
+
+    // রো ৪: কলাম হেডার
+    var repHeaders = ["Order ID", "Date & Time", "Customer Name", "Phone Number", "Grand Total Bill", "Order Status"];
+    var headRange = rSheet.getRange("A4:F4");
+    headRange.setValues([repHeaders])
+      .setBackground("#F1F5F9")
+      .setFontColor("#1E293B")
+      .setFontFamily("Segoe UI")
+      .setFontWeight("bold")
+      .setFontSize(10)
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle")
+      .setBorder(true, true, true, true, true, true, "#CBD5E1", SpreadsheetApp.BorderStyle.SOLID);
+
+    // রো ৫: ডায়নামিক ফিল্টার ফর্মুলা
+    rSheet.getRange("A5").setFormula(
+      '=IFERROR(FILTER({Orders!A5:D, Orders!L5:L, Orders!N5:N}, ISNUMBER(SEARCH(TEXT(B2, "dd-mmm-yyyy"), Orders!B5:B))), "এই তারিখে কোনো অর্ডার পাওয়া যায়নি")'
+    );
+
+    rSheet.setFrozenRows(4);
+  } catch (err) {}
+}
+
+/* =========================================================================
+   তারিখ ভিত্তিক ফিল্টার ফাংশনসমূহ (DATE FILTER ACTIONS)
+   ========================================================================= */
+
+// আজকের অর্ডার ফিল্টার
+function filterOrdersToday() {
+  var sheet = getSheet_();
+  var filter = sheet.getFilter() || sheet.getRange(4, 1, Math.max(5, sheet.getLastRow()), HEADERS.length).createFilter();
+  var todayStr = Utilities.formatDate(new Date(), "Asia/Dhaka", "dd-MMM-yyyy");
+  var criteria = SpreadsheetApp.newFilterCriteria().whenTextContains(todayStr).build();
+  filter.setColumnFilterCriteria(2, criteria);
+  try {
+    SpreadsheetApp.getUi().alert("ফিল্টার সফল!", "আজকের (" + todayStr + ") সকল অর্ডার ফিল্টার করা হয়েছে।", SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (e) {}
+}
+
+// গতকালের অর্ডার ফিল্টার
+function filterOrdersYesterday() {
+  var sheet = getSheet_();
+  var filter = sheet.getFilter() || sheet.getRange(4, 1, Math.max(5, sheet.getLastRow()), HEADERS.length).createFilter();
+  var yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  var yestStr = Utilities.formatDate(yesterday, "Asia/Dhaka", "dd-MMM-yyyy");
+  var criteria = SpreadsheetApp.newFilterCriteria().whenTextContains(yestStr).build();
+  filter.setColumnFilterCriteria(2, criteria);
+  try {
+    SpreadsheetApp.getUi().alert("ফিল্টার সফল!", "গতকালের (" + yestStr + ") সকল অর্ডার ফিল্টার করা হয়েছে।", SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (e) {}
+}
+
+// চলতি মাসের অর্ডার ফিল্টার
+function filterOrdersThisMonth() {
+  var sheet = getSheet_();
+  var filter = sheet.getFilter() || sheet.getRange(4, 1, Math.max(5, sheet.getLastRow()), HEADERS.length).createFilter();
+  var monthStr = Utilities.formatDate(new Date(), "Asia/Dhaka", "MMM-yyyy");
+  var criteria = SpreadsheetApp.newFilterCriteria().whenTextContains(monthStr).build();
+  filter.setColumnFilterCriteria(2, criteria);
+  try {
+    SpreadsheetApp.getUi().alert("ফিল্টার সফল!", "চলতি মাসের (" + monthStr + ") সকল অর্ডার ফিল্টার করা হয়েছে।", SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (e) {}
+}
+
+// কাস্টম বা নির্দিষ্ট তারিখ ফিল্টার
+function filterOrdersCustomDate() {
+  try {
+    var ui = SpreadsheetApp.getUi();
+    var prompt = ui.prompt("📅 তারিখ ফিল্টার", "যে তারিখের অর্ডার দেখতে চান লিখুন (যেমন: 01-Nov-2026 বা Nov-2026):", ui.ButtonSet.OK_CANCEL);
+    if (prompt.getSelectedButton() === ui.Button.OK) {
+      var dateInput = prompt.getResponseText().trim();
+      if (dateInput) {
+        var sheet = getSheet_();
+        var filter = sheet.getFilter() || sheet.getRange(4, 1, Math.max(5, sheet.getLastRow()), HEADERS.length).createFilter();
+        var criteria = SpreadsheetApp.newFilterCriteria().whenTextContains(dateInput).build();
+        filter.setColumnFilterCriteria(2, criteria);
+      }
+    }
+  } catch (e) {}
+}
+
+// সব ফিল্টার ক্লিয়ার করে সব অর্ডার দেখানো
+function clearOrderFilter() {
+  var sheet = getSheet_();
+  var filter = sheet.getFilter();
+  if (filter) {
+    try {
+      filter.removeColumnFilterCriteria(2);
+      SpreadsheetApp.getUi().alert("ফিল্টার সরানো হয়েছে!", "এখন শিটের সব তারিখের অর্ডার দেখা যাচ্ছে।", SpreadsheetApp.getUi().ButtonSet.OK);
+    } catch (e) {}
+  }
 }
 
 /**
