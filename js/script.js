@@ -3,6 +3,12 @@
   var C = window.SITE_CONFIG || {};
 
   // ব্যাকওয়ার্ড ও নতুন কনফিগ নরম্যালাইজেশন (sheet, tracking, pixel)
+  if (!C.images) C.images = {};
+  if (!C.images.products) C.images.products = {};
+  if (!C.placeholderLabels) C.placeholderLabels = {};
+  if (!Array.isArray(C.products)) C.products = [];
+  if (!Array.isArray(C.shipping)) C.shipping = [];
+
   if (C.sheet) {
     if (!C.apiEndpoint) C.apiEndpoint = C.sheet.apiEndpoint;
     if (!C.sheetUrl) C.sheetUrl = C.sheet.sheetUrl;
@@ -233,42 +239,52 @@
   /* ---------- carousels ---------- */
   var RATIO = { gallery: "4/3", reviews: "3/4", documents: "3/4" };
   document.querySelectorAll("[data-carousel]").forEach(function (root) {
-    var key = root.getAttribute("data-carousel"), names = C.images[key] || [];
-    var label = C.placeholderLabels[key] || "ছবি";
-    var dims = RATIO[key] === "4/3" ? [600, 450] : [450, 600];
-    root.style.setProperty("--ratio", RATIO[key]);
-    root.innerHTML = '<button class="c-nav c-prev" type="button" aria-label="আগের">‹</button><div class="c-view"><div class="c-track"></div></div><button class="c-nav c-next" type="button" aria-label="পরের">›</button><div class="c-dots"></div>';
-    var track = $(".c-track", root), dots = $(".c-dots", root), idx = 0, per = 3, timer;
-    names.forEach(function (n, i) {
-      var s = document.createElement("div"); s.className = "c-slide";
-      var f = document.createElement("div"); f.className = "frame";
-      f.appendChild(img(n, label + " " + bn(i + 1), dims[0], dims[1]));
-      s.appendChild(f); track.appendChild(s);
-    });
-    function perView() { var w = window.innerWidth; return Math.min(w < 400 ? 2 : 3, names.length || 1); }
-    function maxIdx() { return Math.max(0, names.length - per); }
-    function render() {
-      idx = Math.min(Math.max(idx, 0), maxIdx());
-      track.style.transform = "translateX(" + (-idx * (100 / per)) + "%)";
-      Array.prototype.forEach.call(dots.children, function (d, i) { d.classList.toggle("on", i === idx); d.setAttribute("aria-current", i === idx ? "true" : "false"); });
+    try {
+      var key = root.getAttribute("data-carousel"), names = (C.images && C.images[key]) || [];
+      var label = (C.placeholderLabels && C.placeholderLabels[key]) || "ছবি";
+      var dims = RATIO[key] === "4/3" ? [600, 450] : [450, 600];
+      root.style.setProperty("--ratio", RATIO[key]);
+      root.innerHTML = '<button class="c-nav c-prev" type="button" aria-label="আগের">‹</button><div class="c-view"><div class="c-track"></div></div><button class="c-nav c-next" type="button" aria-label="পরের">›</button><div class="c-dots"></div>';
+      var track = $(".c-track", root), dots = $(".c-dots", root), idx = 0, per = 3, timer;
+      names.forEach(function (n, i) {
+        var s = document.createElement("div"); s.className = "c-slide";
+        var f = document.createElement("div"); f.className = "frame";
+        f.appendChild(img(n, label + " " + bn(i + 1), dims[0], dims[1]));
+        s.appendChild(f); track.appendChild(s);
+      });
+      function perView() { var w = window.innerWidth; return Math.min(w < 400 ? 2 : 3, names.length || 1); }
+      function maxIdx() { return Math.max(0, names.length - per); }
+      function render() {
+        idx = Math.min(Math.max(idx, 0), maxIdx());
+        track.style.transform = "translateX(" + (-idx * (100 / per)) + "%)";
+        if (dots && dots.children) {
+          Array.prototype.forEach.call(dots.children, function (d, i) { d.classList.toggle("on", i === idx); d.setAttribute("aria-current", i === idx ? "true" : "false"); });
+        }
+      }
+      function build() {
+        per = perView(); root.style.setProperty("--per", per);
+        if (dots) {
+          dots.innerHTML = "";
+          for (var i = 0; i <= maxIdx(); i++) { (function (i) { var b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-label", "স্লাইড " + (i + 1)); b.onclick = function () { idx = i; render(); }; dots.appendChild(b); })(i); }
+        }
+        var many = maxIdx() > 0;
+        root.querySelectorAll(".c-nav").forEach(function (n) { n.style.display = many ? "" : "none"; });
+        render();
+      }
+      function go(d) { idx = idx + d; if (idx > maxIdx()) idx = 0; if (idx < 0) idx = maxIdx(); render(); }
+      var prevBtn = $(".c-prev", root);
+      if (prevBtn) prevBtn.onclick = function () { go(-1); };
+      var nextBtn = $(".c-next", root);
+      if (nextBtn) nextBtn.onclick = function () { go(1); };
+      var sx = null;
+      root.addEventListener("touchstart", function (e) { sx = e.touches[0].clientX; }, { passive: true });
+      root.addEventListener("touchend", function (e) { if (sx === null) return; var dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); sx = null; });
+      root.addEventListener("keydown", function (e) { if (e.key === "ArrowLeft") go(-1); if (e.key === "ArrowRight") go(1); });
+      window.addEventListener("resize", build);
+      build();
+    } catch (cErr) {
+      console.warn("ক্যারোজেল ইনিট সতর্কবার্তা:", cErr);
     }
-    function build() {
-      per = perView(); root.style.setProperty("--per", per);
-      dots.innerHTML = "";
-      for (var i = 0; i <= maxIdx(); i++) { (function (i) { var b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-label", "স্লাইড " + (i + 1)); b.onclick = function () { idx = i; render(); }; dots.appendChild(b); })(i); }
-      var many = maxIdx() > 0;
-      root.querySelectorAll(".c-nav").forEach(function (n) { n.style.display = many ? "" : "none"; });
-      render();
-    }
-    function go(d) { idx = idx + d; if (idx > maxIdx()) idx = 0; if (idx < 0) idx = maxIdx(); render(); }
-    $(".c-prev", root).onclick = function () { go(-1); };
-    $(".c-next", root).onclick = function () { go(1); };
-    var sx = null;
-    root.addEventListener("touchstart", function (e) { sx = e.touches[0].clientX; }, { passive: true });
-    root.addEventListener("touchend", function (e) { if (sx === null) return; var dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); sx = null; });
-    root.addEventListener("keydown", function (e) { if (e.key === "ArrowLeft") go(-1); if (e.key === "ArrowRight") go(1); });
-    window.addEventListener("resize", build);
-    build();
   });
 
   /* ---------- checkout (Multiple Products Support + Interactive Cart) ---------- */
@@ -288,34 +304,51 @@
   var ship = function () { return C.shipping.filter(function (s) { return s.id === state.sid; })[0]; };
 
   // পণ্যসমূহ রেন্ডার করা (বামপাশের প্যাকেজ কার্ড)
-  C.products.forEach(function (p) {
-    var card = document.createElement("div");
-    card.className = "pkg";
-    card.dataset.id = p.id;
-    card.innerHTML =
-      '<input type="checkbox" class="pkg-check" data-id="' + esc(p.id) + '" aria-label="' + esc(p.name) + '">' +
-      '<span class="th"></span>' +
-      '<div class="pkg-info">' +
-        '<span class="nm">' + esc(p.name) + '</span>' +
-        '<span class="pr">' + (p.oldPrice ? "<del>" + money(p.oldPrice) + "</del>" : "") + money(p.price) + '</span>' +
-      '</div>' +
-      '<div class="pkg-qty" data-id="' + esc(p.id) + '">' +
-        '<button type="button" class="pq-btn minus" data-id="' + esc(p.id) + '" aria-label="কমান">−</button>' +
-        '<span class="pkg-qty-num" data-id="' + esc(p.id) + '">১</span>' +
-        '<button type="button" class="pq-btn plus" data-id="' + esc(p.id) + '" aria-label="বাড়ান">+</button>' +
-      '</div>' +
-      (p.badge ? '<span class="bd">' + esc(p.badge) + '</span>' : '');
+  if (pkgBox && Array.isArray(C.products)) {
+    pkgBox.innerHTML = "";
+    C.products.forEach(function (p) {
+      try {
+        var card = document.createElement("div");
+        card.className = "pkg";
+        card.dataset.id = p.id;
+        card.innerHTML =
+          '<input type="checkbox" class="pkg-check" data-id="' + esc(p.id) + '" aria-label="' + esc(p.name) + '">' +
+          '<span class="th"></span>' +
+          '<div class="pkg-info">' +
+            '<span class="nm">' + esc(p.name) + '</span>' +
+            '<span class="pr">' + (p.oldPrice ? "<del>" + money(p.oldPrice) + "</del>" : "") + money(p.price) + '</span>' +
+          '</div>' +
+          '<div class="pkg-qty" data-id="' + esc(p.id) + '">' +
+            '<button type="button" class="pq-btn minus" data-id="' + esc(p.id) + '" aria-label="কমান">−</button>' +
+            '<span class="pkg-qty-num" data-id="' + esc(p.id) + '">১</span>' +
+            '<button type="button" class="pq-btn plus" data-id="' + esc(p.id) + '" aria-label="বাড়ান">+</button>' +
+          '</div>' +
+          (p.badge ? '<span class="bd">' + esc(p.badge) + '</span>' : '');
 
-    $(".th", card).replaceWith(img(C.images.products[p.thumb] || p.thumb, "ছবি", 112, 112, p.name));
-    pkgBox.appendChild(card);
-  });
+        var thumbPath = (C.images && C.images.products && C.images.products[p.thumb]) || p.thumb || "";
+        var thumbImg = img(thumbPath, "ছবি", 112, 112, p.name);
+        var thPlaceholder = $(".th", card);
+        if (thPlaceholder) {
+          thPlaceholder.replaceWith(thumbImg);
+        } else {
+          card.appendChild(thumbImg);
+        }
+        pkgBox.appendChild(card);
+      } catch (pErr) {
+        console.error("পণ্য কার্ড তৈরিতে ত্রুটি:", p, pErr);
+      }
+    });
+  }
 
   // শিপিং মেথড রেন্ডার করা
-  C.shipping.forEach(function (s) {
-    var l = document.createElement("label");
-    l.innerHTML = '<input type="radio" name="shipping" value="' + esc(s.id) + '"> ' + esc(s.label) + " – " + money(s.charge);
-    shipBox.appendChild(l);
-  });
+  if (shipBox && Array.isArray(C.shipping)) {
+    shipBox.innerHTML = "";
+    C.shipping.forEach(function (s) {
+      var l = document.createElement("label");
+      l.innerHTML = '<input type="radio" name="shipping" value="' + esc(s.id) + '"> ' + esc(s.label) + " – " + money(s.charge);
+      shipBox.appendChild(l);
+    });
+  }
 
   // বামপাশের প্রোডাক্ট কার্ডে ক্লিক বা পরিমাণ পরিবর্তনের হ্যান্ডলার
   pkgBox.addEventListener("click", function (e) {

@@ -180,6 +180,13 @@ window.SITE_CONFIG = {
     ext: ".jpg",
     benefit: "assets/gallery/gallery-1.jpg",
     offerBg: "assets/gallery/gallery-2.jpg",
+    products: {
+      "assets/products/honey-500.jpg": "assets/products/honey-500.jpg",
+      "assets/products/honey-1000.jpg": "assets/products/honey-1000.jpg",
+      "assets/products/nut-500.jpg": "assets/products/nut-500.jpg",
+      "assets/products/nut-1000.jpg": "assets/products/nut-1000.jpg",
+      "assets/products/combo.jpg": "assets/products/combo.jpg"
+    },
     gallery: [
       "assets/gallery/gallery-1.jpg",
       "assets/gallery/gallery-2.jpg",
