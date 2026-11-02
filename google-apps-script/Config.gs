@@ -2,12 +2,12 @@
  * =========================================================================
  * গুগল শিট কনফিগারেশন ফাইল (Config.gs)
  * =========================================================================
- * 
+ *
  * 📌 নতুন শিটে ডাটা পাঠাতে করণীয়:
  * ১. আপনার নতুন Google Sheet ওপেন করে ব্রাউজারের লিংকটি কপি করুন।
  * ২. নিচের "SPREADSHEET_ID" তে সেই নতুন লিংকটি বসিয়ে দিন।
  * ৩. উপরে Save (💾) করে Deploy ➔ Manage deployments ➔ Edit ➔ New version ➔ Deploy করুন।
- * 
+ *
  * 💡 Code.gs ফাইলের কোনো কোড পরিবর্তনের প্রয়োজন নেই!
  * =========================================================================
  */
@@ -17,7 +17,8 @@
    ========================================================================= */
 
 // আপনার মূল Google Sheet-এর সম্পূর্ণ ব্রাউজার লিংকটি এখানে দিন:
-var SPREADSHEET_ID = "https://docs.google.com/spreadsheets/d/1Ehh9d1jxOlEC2Szg9bsU8S-fGPQ-qPRApas0ItsG120/edit?gid=0#gid=0";
+var SPREADSHEET_ID =
+  "https://docs.google.com/spreadsheets/d/1kzUYQQrnnky6f3SsqZiPr_pyeGh86yAl-EjizavbPDw/edit?gid=0#gid=0";
 
 // যে শিট/ট্যাবে অর্ডার জমা হবে সেটির নাম (ডিফল্ট: "Orders"):
 var SHEET_NAME = "Orders";
@@ -30,4 +31,3 @@ var TRACKING_SPREADSHEET_ID = "";
 
 // ট্র্যাকিং ট্যাবের নাম (ডিফল্ট: "Visitors"):
 var TRACKING_SHEET_NAME = "Visitors";
-

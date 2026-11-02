@@ -19,12 +19,12 @@ window.SITE_CONFIG = {
 
   // আপনার গুগল শিটের সম্পূর্ণ ব্রাউজার লিংক
   // 💡 এখানে আপনার নতুন শিটের লিংকটি দিলে কাস্টমারের সকল অর্ডার সরাসরি আপনার নতুন শিটেই সেভ হবে!
-  sheetUrl: "https://docs.google.com/spreadsheets/d/1Ehh9d1jxOlEC2Szg9bsU8S-fGPQ-qPRApas0ItsG120/edit?gid=0#gid=0",
+  sheetUrl: "https://docs.google.com/spreadsheets/d/1kzUYQQrnnky6f3SsqZiPr_pyeGh86yAl-EjizavbPDw/edit?gid=0#gid=0",
 
   // পেজে "লাইভ শিট ডেমো" বাটনটি দেখাবেন কি না? (true = দেখাবে, false = লুকানো থাকবে)
   sheetDemo: {
     enabled: true,
-    url: "https://docs.google.com/spreadsheets/d/1Ehh9d1jxOlEC2Szg9bsU8S-fGPQ-qPRApas0ItsG120/edit?gid=0#gid=0",
+    url: "https://docs.google.com/spreadsheets/d/1kzUYQQrnnky6f3SsqZiPr_pyeGh86yAl-EjizavbPDw/edit?gid=0#gid=0",
     title: "📊 আপনার ডাটা কীভাবে সেভ হবে তা দেখে নিন",
     subtitle: "অর্ডার সাবমিট করার সাথে সাথে কাস্টমারের নাম, মোবাইল, ঠিকানা ও অর্ডার তথ্য কীভাবে প্রফেশনাল গুগল শিটে স্বয়ংক্রিয়ভাবে জমা হয় তা সরাসরি দেখুন।",
     btnText: "📋 আপনার ডাটা যেভাবে সেভ হবে তা লাইভ দেখে নিন ➔",
