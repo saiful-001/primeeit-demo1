@@ -862,16 +862,15 @@
     var v = validate();
     if (!v) return;
 
-    // ফ্রড এলার্ট ও ডুপ্লিকেট স্প্যাম প্রটেকশন (একই নাম্বার দিয়ে বারবার অর্ডার আটকানো)
-    var FRAUD_COOLDOWN_MS = 15 * 60 * 1000; // ১৫ মিনিট কুলডাউন
+    // ফ্রড এলার্ট ও ডুপ্লিকেট স্প্যাম প্রটেকশন (একই তথ্য দ্রুত ডাবল-ক্লিক আটকানো)
+    var FRAUD_COOLDOWN_MS = 20 * 1000; // ২০ সেকেন্ড কুলডাউন (যাতে গ্রাহক ভিন্ন অর্ডার করতে পারেন)
     var lastOrderRaw = localStorage.getItem("honey_last_order");
     if (lastOrderRaw) {
       try {
         var lastOrder = JSON.parse(lastOrderRaw);
         var timePassed = Date.now() - (lastOrder.time || 0);
         if (lastOrder.phone === v.phone && timePassed < FRAUD_COOLDOWN_MS) {
-          var minsLeft = Math.ceil((FRAUD_COOLDOWN_MS - timePassed) / 60000);
-          showMsg("fail", "⚠️ ফ্রড এলার্ট (Fraud Alert): আপনি এই মোবাইল নাম্বার দিয়ে কিছুক্ষণ আগেই একটি অর্ডার সম্পন্ন করেছেন (অর্ডার আইডি: " + (lastOrder.orderId || "") + ")। আপনার অর্ডারটি ইতোমধ্যে সফলভাবে গ্রহণ করা হয়েছে। বারবার অর্ডার পাঠানোর প্রয়োজন নেই। অর্ডারে কোনো পরিবর্তন করতে চাইলে সরাসরি আমাদের নম্বরে কল করুন। (" + bn(minsLeft) + " মিনিট পর পুনরায় নতুন অর্ডার করা যাবে)");
+          showMsg("fail", "⚠️ আপনার অর্ডারটি ইতোমধ্যে পাঠানো হয়েছে (অর্ডার আইডি: " + (lastOrder.orderId || "") + ")। অনুগ্রহ করে কয়েক সেকেন্ড অপেক্ষা করুন।");
           $("#checkout").scrollIntoView({ behavior: "smooth", block: "start" });
           return;
         }
