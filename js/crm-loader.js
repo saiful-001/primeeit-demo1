@@ -9,9 +9,8 @@
   "use strict";
 
   var STORAGE_KEY = "aschii_crm_site_config";
-  var TYPE_KEY = "aschii_crm_website_type";
 
-  // Preset Configurations for Universal Website Types
+  // Preset Configurations for Universal Website Models
   window.PRESET_CONFIGS = {
     // 1. Product Selling Website (E-commerce / Honey Nut)
     product: {
@@ -27,6 +26,10 @@
         "শারীরিক ক্লান্তি দূর করে প্রাকৃতিক এনার্জি ও রোগ প্রতিরোধ ক্ষমতা বৃদ্ধি করে",
         "শতভাগ স্বাস্থ্যসম্মত ও হাইজিনিক পরিবেশে প্যাকেজিংকৃত প্রিমিয়াম কোয়ালিটি"
       ],
+      reviewsTitle: "আমাদের কাস্টমারদের মতামত",
+      docsTitle: "আমাদের ল্যাব টেস্ট রিপোর্ট ও ডকুমেন্টস",
+      offerLine: "খাঁটি মধু ও হানি নাটে চলছে বিশেষ ছাড়!",
+      offerNote: "সারা দেশে হোম ডেলিভারি ও ক্যাশ অন ডেলিভারি সুবিধা (পণ্য পেয়ে টাকা দিন)",
       checkoutTitle: "অর্ডার করতে নিচের ফর্মটি পূরণ করুন",
       packagesTitle: "পছন্দের পণ্য বেছে নিন (এক বা একাধিক সিলেক্ট করতে পারেন)",
       billingTitle: "বিলিং ও ডেলিভারি তথ্য",
@@ -34,6 +37,13 @@
       submitBtnText: "অর্ডার কনফার্ম করুন",
       footMsg: "আমাদের খাঁটি পণ্য বেছে নেওয়ার জন্য ধন্যবাদ। সুস্থ থাকুন, ভালো থাকুন।",
       footCredit: "© খাঁটি মধু ও প্রিমিয়াম হানি নাট",
+      products: [
+        { id: "m500", name: "খাঁটি মধু – ৫০০ গ্রাম", price: 550, oldPrice: 650, badge: "", thumb: "assets/products/honey-500.jpg" },
+        { id: "m1000", name: "খাঁটি মধু – ১ কেজি", price: 1050, oldPrice: 1200, badge: "জনপ্রিয়", thumb: "assets/products/honey-1000.jpg" },
+        { id: "hn500", name: "প্রিমিয়াম হানি নাট – ৫০০ গ্রাম", price: 650, oldPrice: 750, badge: "", thumb: "assets/products/nut-500.jpg" },
+        { id: "hn1000", name: "প্রিমিয়াম হানি নাট – ১ কেজি", price: 1250, oldPrice: 1400, badge: "সেরা পছন্দ", thumb: "assets/products/nut-1000.jpg" },
+        { id: "combo", name: "মেগা কম্বো (১ কেজি মধু + ১ কেজি হানি নাট)", price: 2200, oldPrice: 2450, badge: "মেগা অফার", thumb: "assets/products/combo.jpg" }
+      ],
       sections: {
         top: true,
         video: true,
@@ -62,6 +72,10 @@
         "Full Automated CRM, Pixel & Analytics Integration",
         "Dedicated Growth Manager & 24/7 Strategic Support"
       ],
+      reviewsTitle: "What Our Agency Clients Say",
+      docsTitle: "Our Case Studies & Growth Metrics",
+      offerLine: "Quarterly Growth Partner Program - 20% Discount",
+      offerNote: "Includes complete funnel audit, pixel setup & dedicated ad manager.",
       checkoutTitle: "Get Started – Request Your Project Proposal",
       packagesTitle: "Select the Service You Need",
       billingTitle: "Contact & Business Information",
@@ -69,6 +83,11 @@
       submitBtnText: "Submit Project Request",
       footMsg: "Empowering businesses to scale through modern design & technology.",
       footCredit: "© ASCHII SOLUTION Agency. All rights reserved.",
+      products: [
+        { id: "srv_meta", name: "Meta Ads & Funnel Scaling", price: 15000, oldPrice: 20000, badge: "Most Popular" },
+        { id: "srv_web", name: "High-Speed Custom Landing Page", price: 12000, oldPrice: 16000, badge: "High ROI" },
+        { id: "srv_crm", name: "Automated Google Sheets CRM & Pixel", price: 8000, oldPrice: 10000, badge: "Essential" }
+      ],
       sections: {
         top: true,
         video: true,
@@ -97,6 +116,10 @@
         "Clean Code, High Test Coverage & Fast Execution",
         "End-to-End Product Ownership from Concept to Production"
       ],
+      reviewsTitle: "Recommendations & Endorsements",
+      docsTitle: "Technical Certifications & Patents",
+      offerLine: "Technical Consultation & Architecture Review",
+      offerNote: "1-on-1 strategy call with in-depth code & system design assessment.",
       checkoutTitle: "Let's Collaborate – Send Me a Message",
       packagesTitle: "Select Collaboration Type / Service",
       billingTitle: "Your Details",
@@ -104,6 +127,11 @@
       submitBtnText: "Send Inquiry",
       footMsg: "Let's build something exceptional together. Feel free to connect.",
       footCredit: "© John Doe Portfolio. All rights reserved.",
+      products: [
+        { id: "cons_call", name: "1-Hour System Architecture Consultation", price: 5000, oldPrice: 7000, badge: "1-on-1" },
+        { id: "code_audit", name: "Full Web App Security & Performance Audit", price: 18000, oldPrice: 22000, badge: "Deep Dive" },
+        { id: "freelance_sprint", name: "Dedicated 1-Week Feature Sprint", price: 35000, oldPrice: 42000, badge: "Fast Delivery" }
+      ],
       sections: {
         top: true,
         video: false,
@@ -183,4 +211,3 @@
     console.warn("CRM Config loader notice:", err);
   }
 })();
-

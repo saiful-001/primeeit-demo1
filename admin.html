@@ -1,17 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ASCHII SOLUTION • Universal Website & CRM Admin Panel</title>
+<title>ASCHII SOLUTION • Universal Website Management & Google Sheets CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --primary: #0F172A;
   --primary-accent: #2563EB;
   --emerald: #059669;
+  --amber: #D97706;
   --bg: #F8FAFC;
   --surface: #FFFFFF;
   --border: #E2E8F0;
@@ -20,12 +21,12 @@
   --danger: #EF4444;
   --radius: 10px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'Hind Siliguri', system-ui, sans-serif; }
 body { background: var(--bg); color: var(--text-main); display: flex; min-height: 100vh; }
 
 /* Sidebar */
 aside.admin-sidebar {
-  width: 260px;
+  width: 270px;
   background: var(--primary);
   color: #fff;
   display: flex;
@@ -33,28 +34,29 @@ aside.admin-sidebar {
   position: fixed;
   top: 0; bottom: 0; left: 0;
   z-index: 100;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.05);
 }
 .sidebar-header {
-  padding: 24px 20px;
+  padding: 22px 20px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-.sidebar-header h2 { font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+.sidebar-header h2 { font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: space-between; }
 .sidebar-header span.badge {
-  font-size: 10px; background: rgba(37,99,235,0.2); color: #60A5FA;
+  font-size: 10px; background: rgba(37,99,235,0.25); color: #93C5FD;
   padding: 3px 8px; border-radius: 20px; border: 1px solid rgba(96,165,250,0.3);
 }
 nav.sidebar-nav {
-  padding: 20px 12px;
+  padding: 18px 12px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 .nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 11px 14px;
   color: #94A3B8;
   text-decoration: none;
   font-size: 13.5px;
@@ -76,7 +78,7 @@ nav.sidebar-nav {
   border-top: 1px solid rgba(255,255,255,0.08);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 .btn-preview {
   display: flex;
@@ -92,14 +94,14 @@ nav.sidebar-nav {
   border-radius: 8px;
   transition: background 0.15s;
 }
-.btn-preview:hover { background: rgba(255,255,255,0.18); }
+.btn-preview:hover { background: rgba(255,255,255,0.2); }
 
 /* Main Content */
 main.admin-main {
-  margin-left: 260px;
+  margin-left: 270px;
   flex: 1;
-  padding: 30px 40px;
-  max-width: 1200px;
+  padding: 28px 40px;
+  max-width: 1240px;
 }
 .top-bar {
   display: flex;
@@ -108,7 +110,7 @@ main.admin-main {
   margin-bottom: 24px;
 }
 .top-bar h1 { font-size: 22px; font-weight: 700; color: var(--text-main); }
-.top-actions { display: flex; gap: 12px; align-items: center; }
+.top-actions { display: flex; gap: 10px; align-items: center; }
 
 /* Buttons */
 .btn {
@@ -127,17 +129,19 @@ main.admin-main {
 .btn-primary:hover { background: #1D4ED8; }
 .btn-success { background: var(--emerald); color: #fff; }
 .btn-success:hover { background: #047857; }
+.btn-sync { background: linear-gradient(135deg, #2563EB, #7C3AED); color: #fff; box-shadow: 0 2px 6px rgba(37,99,235,0.25); }
+.btn-sync:hover { opacity: 0.95; transform: translateY(-1px); }
 .btn-outline { background: var(--surface); color: var(--text-main); border: 1px solid var(--border); }
 .btn-outline:hover { background: #F1F5F9; }
 .btn-danger { background: #FEE2E2; color: var(--danger); border: 1px solid #FECACA; }
 .btn-danger:hover { background: #FCA5A5; color: #fff; }
 
-/* Sections / Panels */
+/* Tabs Panes */
 .tab-pane { display: none; }
 .tab-pane.active { display: block; animation: fadeIn 0.2s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Cards & Layout */
+/* Cards */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -157,7 +161,7 @@ main.admin-main {
 label { font-size: 12.5px; font-weight: 600; color: #334155; }
 input[type="text"], input[type="url"], input[type="number"], select, textarea {
   width: 100%;
-  padding: 9px 12px;
+  padding: 9.5px 12px;
   font-size: 13.5px;
   border: 1px solid var(--border);
   border-radius: 7px;
@@ -170,14 +174,14 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--primary-accent);
   box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
 }
-textarea { resize: vertical; min-height: 80px; }
+textarea { resize: vertical; min-height: 85px; line-height: 1.5; }
 
 /* Website Type Picker Cards */
 .type-picker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
 .type-card {
   border: 2px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px;
+  padding: 20px;
   cursor: pointer;
   background: #fff;
   transition: all 0.2s ease;
@@ -186,7 +190,7 @@ textarea { resize: vertical; min-height: 80px; }
 .type-card:hover { border-color: #93C5FD; transform: translateY(-2px); }
 .type-card.selected { border-color: var(--primary-accent); background: #EFF6FF; }
 .type-card h3 { font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 6px; }
-.type-card p { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+.type-card p { font-size: 12.5px; color: var(--text-muted); line-height: 1.4; }
 
 /* Toggle Switches */
 .switch-item {
@@ -199,12 +203,7 @@ textarea { resize: vertical; min-height: 80px; }
   border-radius: 8px;
 }
 .switch-item span { font-size: 13.5px; font-weight: 500; }
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
-}
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider {
   position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
@@ -221,12 +220,8 @@ textarea { resize: vertical; min-height: 80px; }
 input:checked + .slider { background-color: var(--emerald); }
 input:checked + .slider:before { transform: translateX(20px); }
 
-/* Table for Products / Items */
-.items-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 12px;
-}
+/* Table */
+.items-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
 .items-table th, .items-table td {
   padding: 10px 12px;
   text-align: left;
@@ -246,12 +241,27 @@ input:checked + .slider:before { transform: translateX(20px); }
 .alert-box.success { background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; }
 .alert-box.error { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
 
-/* Responsive */
+/* Sheet Sync Banner Card */
+.sync-banner {
+  background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 14px rgba(15,23,42,0.15);
+}
+.sync-banner h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.sync-banner p { font-size: 13px; color: #CBD5E1; max-width: 650px; line-height: 1.5; }
+
 @media(max-width: 900px) {
   aside.admin-sidebar { width: 70px; }
   aside.admin-sidebar .sidebar-header h2 span, .nav-item span, .btn-preview span, .sidebar-footer { display: none; }
   main.admin-main { margin-left: 70px; padding: 20px; }
   .type-picker-grid { grid-template-columns: 1fr; }
+  .sync-banner { flex-direction: column; gap: 16px; align-items: flex-start; }
 }
 </style>
 </head>
@@ -260,11 +270,11 @@ input:checked + .slider:before { transform: translateX(20px); }
 <!-- Sidebar -->
 <aside class="admin-sidebar">
   <div class="sidebar-header">
-    <h2>⚡ ASCHII CRM <span class="badge">v4.0</span></h2>
+    <h2>⚡ ASCHII CRM <span class="badge">v4.2</span></h2>
   </div>
   <nav class="sidebar-nav">
-    <div class="nav-item active" data-tab="tab-sheets">📑 Google Sheets Settings</div>
-    <div class="nav-item" data-tab="tab-type">🌐 Website Type (Universal)</div>
+    <div class="nav-item active" data-tab="tab-sheets">📑 Google Sheets & Sync</div>
+    <div class="nav-item" data-tab="tab-type">🌐 Website Models (Universal)</div>
     <div class="nav-item" data-tab="tab-content">✍️ Text & Content</div>
     <div class="nav-item" data-tab="tab-products">🛒 Products & Services</div>
     <div class="nav-item" data-tab="tab-sections">👁️ Sections Show / Hide</div>
@@ -280,7 +290,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 <!-- Main Container -->
 <main class="admin-main">
   <div class="top-bar">
-    <h1 id="pageTitle">📑 Google Sheets Settings</h1>
+    <h1 id="pageTitle">📑 Google Sheets Settings & One-Click Design Sync</h1>
     <div class="top-actions">
       <button type="button" class="btn btn-outline" id="btnReset">🔄 Reset Defaults</button>
       <button type="button" class="btn btn-success" id="btnSave">💾 Save Changes</button>
@@ -289,77 +299,101 @@ input:checked + .slider:before { transform: translateX(20px); }
 
   <div id="alertBox" class="alert-box"></div>
 
-  <!-- TAB 1: GOOGLE SHEETS SETTINGS -->
+  <!-- 1-CLICK REMOTE DESIGN SYNC BANNER -->
+  <div class="sync-banner">
+    <div>
+      <h3>🚀 ১-ক্লিক রিমোট শিট ডিজাইন সিঙ্ক (One-Click Sheet Design Sync)</h3>
+      <p>গুগল শিটে বারবার কোড কপি-পেস্ট করার কোনো প্রয়োজন নেই! নিচের <strong>"Sync Sheet Design Now"</strong> বাটনে ক্লিক করলে আপনার গুগল শিটের সকল ট্যাব (Orders, User Activity, Pixel, Monthly Report) নিখুঁত আধুনিক ডিজাইনে অটো-সিঙ্ক হয়ে যাবে।</p>
+    </div>
+    <button type="button" class="btn btn-sync" id="btnRemoteSync" style="padding:12px 20px; font-size:14px;">
+      🔄 Sync Sheet Design Now
+    </button>
+  </div>
+
+  <!-- TAB 1: GOOGLE SHEETS SETTINGS & 4 TABS -->
   <section class="tab-pane active" id="tab-sheets">
     <div class="card">
       <div class="card-header">
-        <h2>Google Sheets Connection & 4 Tabs Integration</h2>
-        <p>Connect your website to Google Sheets. All orders, pixel events, and user activities are organized into 4 separate tabs automatically.</p>
+        <h2>Google Sheets API Connection</h2>
+        <p>আপনার গুগল শিট এবং Apps Script ওয়েব অ্যাপ লিংক এখানে যুক্ত করুন।</p>
       </div>
       <div class="form-grid">
         <div class="form-group full">
-          <label>Google Apps Script API URL (Web App /exec link):</label>
+          <label>Google Apps Script API URL (/exec লিংক):</label>
           <input type="url" id="apiEndpoint" placeholder="https://script.google.com/macros/s/.../exec">
-          <small style="color:var(--text-muted); font-size:12px;">This is the deployed Web App URL where submissions are processed.</small>
+          <small style="color:var(--text-muted); font-size:12px;">Google Apps Script থেকে Deploy ➔ New deployment ➔ Web app হিসেবে প্রাপ্ত /exec লিংক।</small>
         </div>
         <div class="form-group full">
-          <label>Google Sheets URL (Your Spreadsheet Link):</label>
+          <label>Google Sheets URL (আপনার শিটের ব্রাউজার লিংক):</label>
           <input type="url" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/.../edit">
-          <small style="color:var(--text-muted); font-size:12px;">The spreadsheet where your 4 Tabs will be automatically organized.</small>
+          <small style="color:var(--text-muted); font-size:12px;">আপনার মূল গুগল শিটের সম্পূর্ণ লিংকটি এখানে দিন।</small>
         </div>
       </div>
-      <div style="margin-top: 18px; display:flex; gap:12px;">
+      <div style="margin-top: 18px; display:flex; gap:12px; flex-wrap:wrap;">
         <button type="button" class="btn btn-primary" id="btnTestConn">🔌 Test Connection</button>
-        <button type="button" class="btn btn-outline" id="btnInitTabs">📑 Initialize 4 Tabs in Sheet</button>
+        <button type="button" class="btn btn-outline" id="btnInitTabs">📑 Initialize / Format All Tabs</button>
       </div>
-      <div id="connStatus" style="margin-top: 14px; font-size: 13px; font-weight: 500;"></div>
+      <div id="connStatus" style="margin-top: 14px; font-size: 13px; font-weight: 600;"></div>
     </div>
 
+    <!-- 4 Tabs Architectural Breakdown -->
     <div class="card">
       <div class="card-header">
-        <h2>4 Separate Google Sheet Tabs Architecture</h2>
-        <p>Your Google Apps Script backend automatically organizes data into these dedicated tabs:</p>
+        <h2>Modern 4-Tab Organized CRM Architecture</h2>
+        <p>আপনার রিকোয়ারমেন্ট অনুযায়ী ডাটা সুনির্দিষ্ট ৪টি ট্যাবে সাজানো থাকে:</p>
       </div>
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
-        <div style="background:#ECFDF5; border:1px solid #A7F3D0; padding:14px; border-radius:8px;">
-          <h4 style="color:#065F46; font-size:14px; margin-bottom:6px;">1. Order Data</h4>
-          <p style="font-size:11.5px; color:#047857; line-height:1.4;">Order ID, Customer Name, Phone, Email, Address, Product/Service, Price, Quantity, Total Amount, Order Status, Date & Time.</p>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+        <div style="background:#F0FDF4; border:1px solid #BBF7D0; padding:16px; border-radius:8px;">
+          <h4 style="color:#166534; font-size:14.5px; margin-bottom:6px;">1. Orders Sheet</h4>
+          <p style="font-size:12px; color:#15803D; line-height:1.4;">
+            <strong>KPI:</strong> Total Orders, Total Revenue, Completed Orders<br>
+            <strong>Note:</strong> Pixel Event & Live Sync এখান থেকে বাদ দিয়ে User Activity শিটে দেয়া হয়েছে।<br>
+            <strong>Columns:</strong> Order ID, Date & Time, Customer Name, Phone, District, Address, Products, Items Qty, Subtotal, Delivery, Charge, Grand Total, Note, Status.
+          </p>
         </div>
-        <div style="background:#F0F9FF; border:1px solid #BAE6FD; padding:14px; border-radius:8px;">
-          <h4 style="color:#0369A1; font-size:14px; margin-bottom:6px;">2. Pixel Data</h4>
-          <p style="font-size:11.5px; color:#0284C7; line-height:1.4;">Event Name, Event ID, Page URL, Product / Value, Visitor ID, Device, Browser, UTM Source, UTM Campaign, Date & Time.</p>
+        <div style="background:#F5F3FF; border:1px solid #DDD6FE; padding:16px; border-radius:8px;">
+          <h4 style="color:#5B21B6; font-size:14.5px; margin-bottom:6px;">2. User Activity Sheet</h4>
+          <p style="font-size:12px; color:#6D28D9; line-height:1.4;">
+            <strong>KPI:</strong> Total Visitors, Purchases, Live Real-time Sync<br>
+            <strong>Reference Design:</strong> হুবহু আপনার পাঠানো ডার্ক নেভি হেডার ও পার্পল কলাম ফরম্যাটে সাজানো।<br>
+            <strong>Columns:</strong> Session ID, Last Updated, Time Spent, Selected Products, Order Completed?, Pixel Event, Customer Phone, fbclid, _fbp, _fbc, Campaign, Ad Content, Device, Traffic Source, Page URL.
+          </p>
         </div>
-        <div style="background:#F5F3FF; border:1px solid #DDD6FE; padding:14px; border-radius:8px;">
-          <h4 style="color:#5B21B6; font-size:14px; margin-bottom:6px;">3. User Activity</h4>
-          <p style="font-size:11.5px; color:#6D28D9; line-height:1.4;">Visitor ID, Page URL, Referrer, Device, Browser, Visit Count, Session Duration, Button Clicks, Date & Time.</p>
+        <div style="background:#EFF6FF; border:1px solid #BFDBFE; padding:16px; border-radius:8px;">
+          <h4 style="color:#1D4ED8; font-size:14.5px; margin-bottom:6px;">3. Pixel Data Sheet</h4>
+          <p style="font-size:12px; color:#1E40AF; line-height:1.4;">
+            <strong>Meta Pixel Tracker:</strong> Event Name, Event ID, Page URL, Product / Value, Visitor ID, Device, Browser, UTM Source, UTM Campaign, Date & Time.
+          </p>
         </div>
-        <div style="background:#FFFBEB; border:1px solid #FDE68A; padding:14px; border-radius:8px;">
-          <h4 style="color:#92400E; font-size:14px; margin-bottom:6px;">4. Monthly Report</h4>
-          <p style="font-size:11.5px; color:#B45309; line-height:1.4;">Date, Total Orders, Total Contacts, Total Visitors, Total Revenue, Completed Orders, Pending Orders.</p>
+        <div style="background:#FEFCE8; border:1px solid #FEF08A; padding:16px; border-radius:8px;">
+          <h4 style="color:#854D0E; font-size:14.5px; margin-bottom:6px;">4. Monthly Report</h4>
+          <p style="font-size:12px; color:#A16207; line-height:1.4;">
+            <strong>Automated Summary:</strong> Date-wise Aggregation: Date, Total Orders, Total Contacts, Total Visitors, Total Revenue, Completed Orders, Pending Orders.
+          </p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- TAB 2: UNIVERSAL WEBSITE TYPE -->
+  <!-- TAB 2: UNIVERSAL WEBSITE MANAGEMENT (3 MODELS) -->
   <section class="tab-pane" id="tab-type">
     <div class="card">
       <div class="card-header">
-        <h2>Universal Website Management</h2>
-        <p>Switch between 3 website models instantly. All titles, forms, and sections adapt dynamically.</p>
+        <h2>Universal Website Management (3 Website Models)</h2>
+        <p>যেকোনো একটি মডেল বেছে নিন—ওয়েবসাইটের সকল টেক্সট, প্যাকেজ ও ফর্ম স্বয়ংক্রিয়ভাবে পরিবর্তিত হয়ে যাবে।</p>
       </div>
       <div class="type-picker-grid">
         <div class="type-card selected" data-type="product">
           <h3>🛒 Product Selling Website</h3>
-          <p>For E-Commerce, Organic Honey & Nuts, physical products with cart, quantities, delivery charges & checkout.</p>
+          <p>খাঁটি মধু ও হানি নাট বা ই-কমার্স পণ্য বিক্রয়ের ওয়েবসাইট। ডায়নামিক কার্ট, ডেলিভারি মেথড ও চেকআউট ফর্ম সহ।</p>
         </div>
         <div class="type-card" data-type="agency">
           <h3>🏢 Agency Portfolio</h3>
-          <p>For Marketing, Software & Growth agencies. Focuses on project proposals, strategy calls, services & client lead forms.</p>
+          <p>ডিজিটাল মার্কেটিং, সফটওয়্যার ও গ্রোথ এজেন্সির জন্য। সার্ভিস প্যাকেজ, কেস স্টাডি ও স্ট্র্যাটেজি কল বুকিং সহ।</p>
         </div>
         <div class="type-card" data-type="portfolio">
           <h3>👤 CV / Personal Portfolio</h3>
-          <p>For Software Engineers, Consultants & Designers. Features core competencies, consulting inquiry form & resume credentials.</p>
+          <p>সফটওয়্যার ইঞ্জিনিয়ার, কনসালট্যান্ট ও ফ্রিল্যান্সারদের জন্য। স্কিলস, সার্ভিস কনসালটেশন ও ইনকোয়ারি ফর্ম সহ।</p>
         </div>
       </div>
     </div>
@@ -369,8 +403,8 @@ input:checked + .slider:before { transform: translateX(20px); }
   <section class="tab-pane" id="tab-content">
     <div class="card">
       <div class="card-header">
-        <h2>General Content & Branding</h2>
-        <p>Edit website headings, buttons, and badges without touching code.</p>
+        <h2>Text & Content Management</h2>
+        <p>ওয়েবসাইটের সকল শিরোনাম, সাব-টাইটেল ও বাটন কোডিং ছাড়া সরাসরি এডিট করুন।</p>
       </div>
       <div class="form-grid">
         <div class="form-group full">
@@ -378,7 +412,7 @@ input:checked + .slider:before { transform: translateX(20px); }
           <input type="text" id="siteName" placeholder="খাঁটি মধু ও প্রিমিয়াম হানি নাট">
         </div>
         <div class="form-group full">
-          <label>Top Main Heading (Use [[highlight]] for colored text):</label>
+          <label>Top Main Heading (রঙিন করতে [[লেখা]] ব্যবহার করুন):</label>
           <input type="text" id="topHeading" placeholder="[[খাঁটি]] মধু ও প্রিমিয়াম [[হানি নাট]] – সরাসরি [[আমাদের কাছ থেকে]] অর্ডার করুন">
         </div>
         <div class="form-group full">
@@ -386,7 +420,7 @@ input:checked + .slider:before { transform: translateX(20px); }
           <input type="text" id="noticeText" placeholder="মধু বা হানি নাট অর্ডার করতে নিচের বাটনে ক্লিক করুন">
         </div>
         <div class="form-group">
-          <label>Primary Order / Call-To-Action Button Text:</label>
+          <label>Primary Call-to-Action Order Button:</label>
           <input type="text" id="orderBtnText" placeholder="👍 এখনই অর্ডার করুন">
         </div>
         <div class="form-group">
@@ -398,7 +432,7 @@ input:checked + .slider:before { transform: translateX(20px); }
           <input type="text" id="benefitsTitle" placeholder="আমাদের খাঁটি মধু ও প্রিমিয়াম হানি নাটের বিশেষত্ব">
         </div>
         <div class="form-group full">
-          <label>Key Benefits (1 per line):</label>
+          <label>Benefits (প্রতি লাইনে ১টি পয়েন্ট):</label>
           <textarea id="benefitsList" rows="4"></textarea>
         </div>
         <div class="form-group">
@@ -406,8 +440,12 @@ input:checked + .slider:before { transform: translateX(20px); }
           <input type="text" id="checkoutTitle" placeholder="অর্ডার করতে নিচের ফর্মটি পূরণ করুন">
         </div>
         <div class="form-group">
-          <label>Products / Service Section Title:</label>
+          <label>Products Section Title:</label>
           <input type="text" id="packagesTitle" placeholder="পছন্দের পণ্য বেছে নিন">
+        </div>
+        <div class="form-group full">
+          <label>Special Offer Text:</label>
+          <input type="text" id="offerLine" placeholder="খাঁটি মধু ও হানি নাটে চলছে বিশেষ ছাড়!">
         </div>
         <div class="form-group full">
           <label>Footer Message:</label>
@@ -426,8 +464,8 @@ input:checked + .slider:before { transform: translateX(20px); }
     <div class="card">
       <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <h2>Product & Service Catalog</h2>
-          <p>Add, edit, or remove products and pricing options shown on your landing page.</p>
+          <h2>Products & Services Catalog</h2>
+          <p>পণ্যের নাম, বিক্রয় মূল্য, পূর্বের মূল্য ও ব্যাজ ম্যানেজ করুন।</p>
         </div>
         <button type="button" class="btn btn-primary" id="btnAddProduct">+ Add Item</button>
       </div>
@@ -437,9 +475,9 @@ input:checked + .slider:before { transform: translateX(20px); }
             <th>ID</th>
             <th>Name</th>
             <th>Price</th>
-            <th>Regular/Old Price</th>
+            <th>Old / Regular Price</th>
             <th>Badge</th>
-            <th>Actions</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody id="productsListBody"></tbody>
@@ -451,50 +489,20 @@ input:checked + .slider:before { transform: translateX(20px); }
   <section class="tab-pane" id="tab-sections">
     <div class="card">
       <div class="card-header">
-        <h2>Sections Visibility Control</h2>
-        <p>Toggle individual sections on or off to tailor the layout for your business needs.</p>
+        <h2>Sections Show / Hide Control</h2>
+        <p>যে যে সেকশন ওয়েবসাইটে দেখাতে চান তা অন রাখুন, বাকিগুলো অফ করতে পারবেন।</p>
       </div>
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
-        <div class="switch-item">
-          <span>Top Header & Title</span>
-          <label class="switch"><input type="checkbox" id="sec_top" checked><span class="slider"></span></label>
-        </div>
-        <div class="switch-item">
-          <span>Video Section</span>
-          <label class="switch"><input type="checkbox" id="sec_video" checked><span class="slider"></span></label>
-        </div>
-        <div class="switch-item">
-          <span>Notice Bar</span>
-          <label class="switch"><input type="checkbox" id="sec_notice" checked><span class="slider"></span></label>
-        </div>
-        <div class="switch-item">
-          <span>Benefits & Highlights</span>
-          <label class="switch"><input type="checkbox" id="sec_benefits" checked><span class="slider"></span></label>
-        </div>
-        <div class="switch-item">
-          <span>Gallery Carousel</span>
-          <label class="switch"><input type="checkbox" id="sec_gallery" checked><span class="slider"></span></label>
-        </div>
-        <div class="switch-item">
-          <span>Customer Reviews</span>
-          <label class="switch"><input type="checkbox" id="sec_reviews" checked><span class="slider"></span></label>
-        </div>
-        <div class="switch-item">
-          <span>Certifications / Documents</span>
-          <label class="switch"><input type="checkbox" id="sec_docs" checked><span class="slider"></span></label>
-        </div>
-        <div class="switch-item">
-          <span>Special Offer Banner</span>
-          <label class="switch"><input type="checkbox" id="sec_offer" checked><span class="slider"></span></label>
-        </div>
-        <div class="switch-item">
-          <span>Products / Packages Selection</span>
-          <label class="switch"><input type="checkbox" id="sec_packages" checked><span class="slider"></span></label>
-        </div>
-        <div class="switch-item">
-          <span>Checkout Form</span>
-          <label class="switch"><input type="checkbox" id="sec_checkout" checked><span class="slider"></span></label>
-        </div>
+        <div class="switch-item"><span>Top Header & Title</span><label class="switch"><input type="checkbox" id="sec_top" checked><span class="slider"></span></label></div>
+        <div class="switch-item"><span>Video Section</span><label class="switch"><input type="checkbox" id="sec_video" checked><span class="slider"></span></label></div>
+        <div class="switch-item"><span>Notice Bar</span><label class="switch"><input type="checkbox" id="sec_notice" checked><span class="slider"></span></label></div>
+        <div class="switch-item"><span>Benefits & Highlights</span><label class="switch"><input type="checkbox" id="sec_benefits" checked><span class="slider"></span></label></div>
+        <div class="switch-item"><span>Gallery Carousel</span><label class="switch"><input type="checkbox" id="sec_gallery" checked><span class="slider"></span></label></div>
+        <div class="switch-item"><span>Customer Reviews</span><label class="switch"><input type="checkbox" id="sec_reviews" checked><span class="slider"></span></label></div>
+        <div class="switch-item"><span>Certifications / Docs</span><label class="switch"><input type="checkbox" id="sec_docs" checked><span class="slider"></span></label></div>
+        <div class="switch-item"><span>Special Offer Banner</span><label class="switch"><input type="checkbox" id="sec_offer" checked><span class="slider"></span></label></div>
+        <div class="switch-item"><span>Products Selection</span><label class="switch"><input type="checkbox" id="sec_packages" checked><span class="slider"></span></label></div>
+        <div class="switch-item"><span>Checkout Form</span><label class="switch"><input type="checkbox" id="sec_checkout" checked><span class="slider"></span></label></div>
       </div>
     </div>
   </section>
@@ -503,8 +511,8 @@ input:checked + .slider:before { transform: translateX(20px); }
   <section class="tab-pane" id="tab-theme">
     <div class="card">
       <div class="card-header">
-        <h2>Brand Colors & Styling</h2>
-        <p>Customize primary and accent colors to align with your brand identity.</p>
+        <h2>Theme Colors & Style</h2>
+        <p>ওয়েবসাইটের প্রাইমারি ও অ্যাকসেন্ট কালার নির্ধারণ করুন।</p>
       </div>
       <div class="form-grid">
         <div class="form-group">
@@ -533,7 +541,7 @@ input:checked + .slider:before { transform: translateX(20px); }
   var currentType = "product";
   var products = [];
 
-  // Tab switching
+  // Sidebar navigation
   document.querySelectorAll(".nav-item").forEach(function(item) {
     item.addEventListener("click", function() {
       document.querySelectorAll(".nav-item").forEach(function(i) { i.classList.remove("active"); });
@@ -546,7 +554,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     });
   });
 
-  // Load from existing config or localStorage
+  // ফর্ম ডাটা লোড
   function loadForm() {
     var raw = localStorage.getItem("aschii_crm_site_config");
     var conf = raw ? JSON.parse(raw) : (window.SITE_CONFIG || {});
@@ -563,13 +571,13 @@ input:checked + .slider:before { transform: translateX(20px); }
     document.getElementById("benefitsList").value = (copy.benefits || []).join("\n");
     document.getElementById("checkoutTitle").value = copy.checkoutTitle || "";
     document.getElementById("packagesTitle").value = copy.packagesTitle || "";
+    document.getElementById("offerLine").value = copy.offerLine || "";
     document.getElementById("footMsg").value = copy.footMsg || "";
     document.getElementById("footCredit").value = copy.footCredit || "";
 
     products = conf.products || (window.SITE_CONFIG && window.SITE_CONFIG.products) || [];
     renderProducts();
 
-    // Sections
     var s = conf.sections || {};
     var secIds = ["top", "video", "notice", "benefits", "gallery", "reviews", "docs", "offer", "packages", "checkout"];
     secIds.forEach(function(k) {
@@ -577,7 +585,6 @@ input:checked + .slider:before { transform: translateX(20px); }
       if (el) el.checked = s[k] !== false;
     });
 
-    // Theme colors
     var colors = conf.colors || {};
     document.getElementById("colorPrimary").value = colors.primary || "";
     document.getElementById("colorAccent").value = colors.accent || "";
@@ -591,11 +598,11 @@ input:checked + .slider:before { transform: translateX(20px); }
       var tr = document.createElement("tr");
       tr.innerHTML = 
         '<td><strong>' + p.id + '</strong></td>' +
-        '<td><input type="text" value="' + (p.name || "") + '" data-idx="' + idx + '" data-field="name" style="padding:4px 8px; font-size:12px;"></td>' +
-        '<td><input type="number" value="' + (p.price || 0) + '" data-idx="' + idx + '" data-field="price" style="width:90px; padding:4px 8px; font-size:12px;"></td>' +
-        '<td><input type="number" value="' + (p.oldPrice || 0) + '" data-idx="' + idx + '" data-field="oldPrice" style="width:90px; padding:4px 8px; font-size:12px;"></td>' +
-        '<td><input type="text" value="' + (p.badge || "") + '" data-idx="' + idx + '" data-field="badge" style="width:100px; padding:4px 8px; font-size:12px;"></td>' +
-        '<td><button type="button" class="btn btn-danger btn-del-prod" data-idx="' + idx + '" style="padding:3px 8px; font-size:11px;">✕ Delete</button></td>';
+        '<td><input type="text" value="' + (p.name || "") + '" data-idx="' + idx + '" data-field="name" style="padding:5px 8px; font-size:12px;"></td>' +
+        '<td><input type="number" value="' + (p.price || 0) + '" data-idx="' + idx + '" data-field="price" style="width:90px; padding:5px 8px; font-size:12px;"></td>' +
+        '<td><input type="number" value="' + (p.oldPrice || 0) + '" data-idx="' + idx + '" data-field="oldPrice" style="width:90px; padding:5px 8px; font-size:12px;"></td>' +
+        '<td><input type="text" value="' + (p.badge || "") + '" data-idx="' + idx + '" data-field="badge" style="width:100px; padding:5px 8px; font-size:12px;"></td>' +
+        '<td><button type="button" class="btn btn-danger btn-del-prod" data-idx="' + idx + '" style="padding:4px 8px; font-size:11px;">✕ Delete</button></td>';
       tbody.appendChild(tr);
     });
 
@@ -618,11 +625,11 @@ input:checked + .slider:before { transform: translateX(20px); }
 
   document.getElementById("btnAddProduct").addEventListener("click", function() {
     var id = "p_" + Date.now().toString(36);
-    products.push({ id: id, name: "New Item / Service", price: 1000, oldPrice: 1200, badge: "New" });
+    products.push({ id: id, name: "New Product / Service", price: 1000, oldPrice: 1200, badge: "New" });
     renderProducts();
   });
 
-  // Website Type Selection
+  // Website Models Picker
   document.querySelectorAll(".type-card").forEach(function(c) {
     c.addEventListener("click", function() {
       document.querySelectorAll(".type-card").forEach(function(tc) { tc.classList.remove("selected"); });
@@ -644,8 +651,14 @@ input:checked + .slider:before { transform: translateX(20px); }
     document.getElementById("benefitsList").value = (preset.benefits || []).join("\n");
     document.getElementById("checkoutTitle").value = preset.checkoutTitle;
     document.getElementById("packagesTitle").value = preset.packagesTitle;
+    document.getElementById("offerLine").value = preset.offerLine || "";
     document.getElementById("footMsg").value = preset.footMsg;
     document.getElementById("footCredit").value = preset.footCredit;
+
+    if (Array.isArray(preset.products)) {
+      products = JSON.parse(JSON.stringify(preset.products));
+      renderProducts();
+    }
 
     var s = preset.sections || {};
     var secIds = ["top", "video", "notice", "benefits", "gallery", "reviews", "docs", "offer", "packages", "checkout"];
@@ -654,10 +667,10 @@ input:checked + .slider:before { transform: translateX(20px); }
       if (el) el.checked = s[k] !== false;
     });
 
-    showAlert("Applied preset for: " + type.toUpperCase() + ". Click 'Save Changes' to apply.", "success");
+    showAlert("Applied preset for: " + type.toUpperCase() + ". Click 'Save Changes' to update website.", "success");
   }
 
-  // Save changes
+  // সেভ চেঞ্জেস
   document.getElementById("btnSave").addEventListener("click", function() {
     var benefitLines = document.getElementById("benefitsList").value.split("\n").map(function(s) { return s.trim(); }).filter(Boolean);
     var secIds = ["top", "video", "notice", "benefits", "gallery", "reviews", "docs", "offer", "packages", "checkout"];
@@ -681,6 +694,7 @@ input:checked + .slider:before { transform: translateX(20px); }
         benefits: benefitLines,
         checkoutTitle: document.getElementById("checkoutTitle").value.trim(),
         packagesTitle: document.getElementById("packagesTitle").value.trim(),
+        offerLine: document.getElementById("offerLine").value.trim(),
         footMsg: document.getElementById("footMsg").value.trim(),
         footCredit: document.getElementById("footCredit").value.trim()
       },
@@ -694,67 +708,80 @@ input:checked + .slider:before { transform: translateX(20px); }
     };
 
     localStorage.setItem("aschii_crm_site_config", JSON.stringify(data));
-    showAlert("🎉 All changes saved successfully! Open Live Preview to see the dynamic result.", "success");
+    showAlert("🎉 পরিবর্তনগুলো সফলভাবে সেভ হয়েছে! Live Preview বাটনে ক্লিক করে ফলাফল দেখুন।", "success");
   });
 
-  // Test Connection
+  // রিমোট সিঙ্ক বাটন (One-Click Remote Sheet Design Sync)
+  document.getElementById("btnRemoteSync").addEventListener("click", function() {
+    var endpoint = document.getElementById("apiEndpoint").value.trim();
+    var sheet = document.getElementById("sheetUrl").value.trim();
+    var btn = document.getElementById("btnRemoteSync");
+
+    if (!endpoint) {
+      showAlert("দয়া করে প্রথমে Apps Script API URL (/exec লিংক) দিন।", "error");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "⏳ সিঙ্ক হচ্ছে...";
+    showAlert("গুগল শিটের সকল ডিজাইন সিঙ্ক করা হচ্ছে...", "success");
+
+    fetch(endpoint + "?action=sync_design&sheetUrl=" + encodeURIComponent(sheet))
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        btn.disabled = false;
+        btn.textContent = "🔄 Sync Sheet Design Now";
+        if (d && d.success) {
+          showAlert("🎉 গুগল শিটের ডিজাইন সফলভাবে আপডেট হয়েছে! কোনো কোড পেস্ট করার প্রয়োজন নেই।", "success");
+        } else {
+          showAlert("সিঙ্ক ত্রুটি: " + (d.error || "অজানা সমস্যা"), "error");
+        }
+      })
+      .catch(function(err) {
+        btn.disabled = false;
+        btn.textContent = "🔄 Sync Sheet Design Now";
+        showAlert("অনুরোধ ব্যর্থ হয়েছে: " + err.message + "। দয়া করে নিশ্চিত করুন Web App পারমিশন 'Anyone' দেওয়া আছে।", "error");
+      });
+  });
+
+  // টেস্ট কানেকশন
   document.getElementById("btnTestConn").addEventListener("click", function() {
     var endpoint = document.getElementById("apiEndpoint").value.trim();
     var sheet = document.getElementById("sheetUrl").value.trim();
     var status = document.getElementById("connStatus");
     if (!endpoint) {
-      showAlert("Please enter your Google Apps Script API URL first.", "error");
+      showAlert("দয়া করে Apps Script API URL দিন।", "error");
       return;
     }
-    status.innerHTML = "⏳ Testing connection with Google Sheets API...";
+    status.innerHTML = "⏳ Testing connection...";
     fetch(endpoint + "?action=test&sheetUrl=" + encodeURIComponent(sheet))
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (d && d.success) {
-          status.innerHTML = "✅ Connection Successful! Connected to: <strong>" + (d.sheetName || "Google Sheets") + "</strong>";
-          showAlert("Connected to Google Sheets successfully!", "success");
+          status.innerHTML = "✅ কানেকশন সফল! সংযুক্ত শিট: <strong>" + (d.sheetName || "Google Sheet") + "</strong>";
+          showAlert("গুগল শিটের সাথে সফলভাবে সংযোগ স্থাপিত হয়েছে!", "success");
         } else {
-          status.innerHTML = "❌ Connection Error: " + (d.error || "Unknown response");
+          status.innerHTML = "❌ ত্রুটি: " + (d.error || "Unknown response");
           showAlert(d.error || "Connection failed", "error");
         }
       })
       .catch(function(err) {
-        status.innerHTML = "❌ Connection failed: " + err.message + ". Check your Web App URL and permissions (Who has access: Anyone).";
-        showAlert("Connection failed. Ensure Apps Script Web App is deployed as 'Anyone'.", "error");
+        status.innerHTML = "❌ সংযোগে সমস্যা: " + err.message;
+        showAlert("কানেকশন ব্যর্থ। Apps Script পারমিশন চেক করুন।", "error");
       });
   });
 
-  // Init 4 Tabs
+  // ফরম্যাট অল ৪ ট্যাবস
   document.getElementById("btnInitTabs").addEventListener("click", function() {
-    var endpoint = document.getElementById("apiEndpoint").value.trim();
-    var sheet = document.getElementById("sheetUrl").value.trim();
-    var status = document.getElementById("connStatus");
-    if (!endpoint) {
-      showAlert("Please enter your Google Apps Script API URL first.", "error");
-      return;
-    }
-    status.innerHTML = "⏳ Initializing 4 Tabs in Google Sheet (Order Data, Pixel Data, User Activity, Monthly Report)...";
-    fetch(endpoint + "?action=init_tabs&sheetUrl=" + encodeURIComponent(sheet))
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        if (d && d.success) {
-          status.innerHTML = "✅ All 4 Tabs formatted and ready in your Google Sheet!";
-          showAlert("4 Tabs Initialized Successfully!", "success");
-        } else {
-          status.innerHTML = "❌ Error: " + (d.error || "Failed");
-        }
-      })
-      .catch(function(err) {
-        status.innerHTML = "❌ Request error: " + err.message;
-      });
+    document.getElementById("btnRemoteSync").click();
   });
 
-  // Reset defaults
+  // রিসেট
   document.getElementById("btnReset").addEventListener("click", function() {
-    if (confirm("Reset all settings back to default?")) {
+    if (confirm("সকল সেটিংস ডিফল্টে রিসেট করতে চান?")) {
       localStorage.removeItem("aschii_crm_site_config");
       loadForm();
-      showAlert("Reset to defaults complete.", "success");
+      showAlert("ডিফল্ট সেটিংস রিস্টোর করা হয়েছে।", "success");
     }
   });
 
@@ -763,7 +790,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     box.className = "alert-box " + type;
     box.textContent = msg;
     box.style.display = "block";
-    setTimeout(function() { box.style.display = "none"; }, 5000);
+    setTimeout(function() { box.style.display = "none"; }, 6000);
   }
 
   loadForm();
@@ -771,4 +798,3 @@ input:checked + .slider:before { transform: translateX(20px); }
 </script>
 </body>
 </html>
-
