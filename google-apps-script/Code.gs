@@ -763,31 +763,60 @@ function formatBasicDataRow_(sheet, rowIndex, numCols) {
  * Monthly Report ডেটা হিসাব ও আপডেট
  */
 function updateMonthlyReportTab(optSs) {
-  var ss = optSs || getSpreadsheet_();
+  var ss = (optSs && typeof optSs.getSheetByName === "function") 
+    ? optSs 
+    : (optSs && typeof optSs.getParent === "function" ? optSs.getParent() : getSpreadsheet_());
+
   var oSheet = ss.getSheetByName(TAB_ORDERS);
   var aSheet = ss.getSheetByName(TAB_ACTIVITY);
   var mSheet = getOrCreateSheet_(ss, TAB_MONTHLY);
+
+  // যদি Monthly Report শিট ফাঁকা থাকে তবে হেডার ও ডিজাইন তৈরি করা
+  if (mSheet.getLastRow() < 2) {
+    formatMonthlySheetDesign(mSheet);
+  }
 
   var orders = [];
   if (oSheet && oSheet.getLastRow() >= 5) {
     orders = oSheet.getRange(5, 1, oSheet.getLastRow() - 4, HEADERS_ORDER.length).getValues();
   }
 
-  var visitorsCount = aSheet && aSheet.getLastRow() >= 5 ? aSheet.getLastRow() - 4 : 0;
+  var visitorsCount = (aSheet && aSheet.getLastRow() >= 5) ? (aSheet.getLastRow() - 4) : 0;
   var map = {};
 
   for (var i = 0; i < orders.length; i++) {
     var row = orders[i];
-    var rawDate = String(row[1] || "");
-    var day = rawDate.split(" ")[0] || Utilities.formatDate(new Date(), "Asia/Dhaka", "dd-MMM-yyyy");
+    if (!row[0] || String(row[0]).indexOf("ASCHII") > -1) continue;
+
+    // Date & Time Column (Column 2, index 1)
+    var rawDate = String(row[1] || "").trim();
+    var day = "";
+    if (rawDate) {
+      day = rawDate.split(" ")[0]; // "02-Nov-2026"
+    }
+    if (!day || day.length < 5) {
+      day = Utilities.formatDate(new Date(), "Asia/Dhaka", "dd-MMM-yyyy");
+    }
+
     if (!map[day]) {
       map[day] = { orders: 0, contacts: 0, revenue: 0, completed: 0, pending: 0 };
     }
-    var total = Number(row[11] || 0);
+
+    // Grand Total Bill (Column 12, index 11)
+    var totalVal = row[11];
+    var totalNum = 0;
+    if (typeof totalVal === "number") {
+      totalNum = totalVal;
+    } else {
+      var parsed = parseFloat(String(totalVal || "").replace(/[^0-9.]/g, ""));
+      totalNum = isNaN(parsed) ? 0 : parsed;
+    }
+
+    // Order Status (Column 14, index 13)
     var status = String(row[13] || "New").toLowerCase();
 
     map[day].orders++;
-    map[day].revenue += total;
+    map[day].revenue += totalNum;
 
     if (status.indexOf("complete") > -1 || status.indexOf("deliver") > -1 || status.indexOf("shipped") > -1) {
       map[day].completed++;
@@ -811,14 +840,21 @@ function updateMonthlyReportTab(optSs) {
     ]);
   }
 
+  // পূর্বের ডেটা রো ৩ থেকে নিরাপদভাবে ক্লিয়ার করা
+  var currentLast = mSheet.getLastRow();
+  if (currentLast >= 3) {
+    mSheet.getRange(3, 1, currentLast - 2, HEADERS_MONTHLY.length).clearContent();
+  }
+
+  // নতুন ডেটা রো ৩ থেকে বসানো
   if (rows.length > 0) {
-    var currentLast = mSheet.getLastRow();
-    if (currentLast >= 3) {
-      mSheet.getRange(3, 1, currentLast - 2, HEADERS_MONTHLY.length).clearContent();
-    }
     mSheet.getRange(3, 1, rows.length, HEADERS_MONTHLY.length).setValues(rows);
     for (var r = 3; r < 3 + rows.length; r++) {
       formatBasicDataRow_(mSheet, r, HEADERS_MONTHLY.length);
+      // রেভিনিউ কলাম (Column 5) কারেন্সি ফরম্যাট
+      try {
+        mSheet.getRange(r, 5).setNumberFormat('"৳"#,##0').setFontWeight("bold");
+      } catch (fe) {}
     }
   }
 }
@@ -882,10 +918,12 @@ function getOrCreateSheet_(ss, sheetName) {
 }
 
 function getSheetFromParam_(param, defaultName) {
-  if (param && typeof param.getRange === "function") {
+  // If param is a Sheet (has getLastRow and getParent methods)
+  if (param && typeof param.getLastRow === "function" && typeof param.getParent === "function") {
     return param;
   }
-  var ss = param || getSpreadsheet_();
+  // If param is a Spreadsheet (has getSheetByName method)
+  var ss = (param && typeof param.getSheetByName === "function") ? param : getSpreadsheet_(param);
   return getOrCreateSheet_(ss, defaultName);
 }
 

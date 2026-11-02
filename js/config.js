@@ -15,7 +15,7 @@ window.SITE_CONFIG = {
      ১. গুগল শিট ও অর্ডার গ্রহণ সেটিংস (GOOGLE SHEET & BACKEND API)
      ======================================================================= */
   // আপনার Google Apps Script Web App URL টি এখানে পেস্ট করুন (যা /exec দিয়ে শেষ হয়)
-  apiEndpoint: "https://script.google.com/macros/s/AKfycbx8HGr4d8Qja-YEjc08fSboRvm3Rewy-wgBUHDSQevzCWdYRguYjRXUlnCxDBr54ec/exec",
+  apiEndpoint: "https://script.google.com/macros/s/AKfycbzZIqb5FDyTHN5rKBM9-oJIhDvnqR4gorO-5JDSjLAK4Fut8bWGoGMbSvVX0XEJ2SgQ/exec",
 
   // আপনার গুগল শিটের সম্পূর্ণ ব্রাউজার লিংক
   // 💡 এখানে আপনার নতুন শিটের লিংকটি দিলে কাস্টমারের সকল অর্ডার সরাসরি আপনার নতুন শিটেই সেভ হবে!
