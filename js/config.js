@@ -15,16 +15,16 @@ window.SITE_CONFIG = {
      ১. গুগল শিট ও অর্ডার গ্রহণ সেটিংস (GOOGLE SHEET & BACKEND API)
      ======================================================================= */
   // আপনার Google Apps Script Web App URL টি এখানে পেস্ট করুন (যা /exec দিয়ে শেষ হয়)
-  apiEndpoint: "https://script.google.com/macros/s/AKfycbzZIqb5FDyTHN5rKBM9-oJIhDvnqR4gorO-5JDSjLAK4Fut8bWGoGMbSvVX0XEJ2SgQ/exec",
+  apiEndpoint: "https://script.google.com/macros/s/AKfycbxWr_NueT7nPYm6frgkiSdeEZo-S2HWUMX7FzPxVnKAD5xLmug9eTfmLjSmCMwtWtqp/exec",
 
   // আপনার গুগল শিটের সম্পূর্ণ ব্রাউজার লিংক
   // 💡 এখানে আপনার নতুন শিটের লিংকটি দিলে কাস্টমারের সকল অর্ডার সরাসরি আপনার নতুন শিটেই সেভ হবে!
-  sheetUrl: "https://docs.google.com/spreadsheets/d/1kzUYQQrnnky6f3SsqZiPr_pyeGh86yAl-EjizavbPDw/edit?gid=0#gid=0",
+  sheetUrl: "https://docs.google.com/spreadsheets/d/1O4YBHNOxNMWvmnKB9TJO-8o8NDCws-IhhjDHNIt9Btc/edit?gid=0#gid=0",
 
   // পেজে "লাইভ শিট ডেমো" বাটনটি দেখাবেন কি না? (true = দেখাবে, false = লুকানো থাকবে)
   sheetDemo: {
     enabled: true,
-    url: "https://docs.google.com/spreadsheets/d/1kzUYQQrnnky6f3SsqZiPr_pyeGh86yAl-EjizavbPDw/edit?gid=0#gid=0",
+    url: "https://docs.google.com/spreadsheets/d/1O4YBHNOxNMWvmnKB9TJO-8o8NDCws-IhhjDHNIt9Btc/edit?gid=0#gid=0",
     title: "📊 আপনার ডাটা কীভাবে সেভ হবে তা দেখে নিন",
     subtitle: "অর্ডার সাবমিট করার সাথে সাথে কাস্টমারের নাম, মোবাইল, ঠিকানা ও অর্ডার তথ্য কীভাবে প্রফেশনাল গুগল শিটে স্বয়ংক্রিয়ভাবে জমা হয় তা সরাসরি দেখুন।",
     btnText: "📋 আপনার ডাটা যেভাবে সেভ হবে তা লাইভ দেখে নিন ➔",
