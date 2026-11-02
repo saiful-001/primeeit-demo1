@@ -87,6 +87,7 @@ function onOpen() {
     ui.createMenu("✨ ASCHII SOLUTION CRM")
       .addItem("🔄 Format & Initialize All 4 Tabs", "formatAllSheetsDesign")
       .addItem("📊 Refresh Monthly Report", "updateMonthlyReportTab")
+      .addItem("🎯 Re-apply Order Status Dropdowns", "reapplyOrderStatusDropdowns")
       .addSeparator()
       .addSubMenu(ui.createMenu("📅 Date-wise Filters (Order Data)")
         .addItem("📌 Today's Orders", "filterTodayOrders")
@@ -161,7 +162,8 @@ function doPost(e) {
     var raw = (e && e.postData && e.postData.contents) || "{}";
     var data = JSON.parse(raw);
 
-    var ss = getSpreadsheet_(data.sheetUrl);
+    var targetSheetUrl = data.sheetUrl || data.trackingSheetUrl || "";
+    var ss = getSpreadsheet_(targetSheetUrl);
     var now = new Date();
     var dateStr = Utilities.formatDate(now, "Asia/Dhaka", "dd-MMM-yyyy hh:mm a");
     var type = (data.type || data.action || "").toLowerCase();
@@ -233,6 +235,20 @@ function handleNewOrder_(ss, data, dateStr) {
 
   formatOrderDataRow_(oSheet, oSheet.getLastRow());
 
+  // Also log / update User Activity tab for this order
+  try {
+    var vId = clean_(data.sessionId || data.visitorId || "-", 60);
+    handleUserActivity_(ss, {
+      visitorId: vId,
+      pageUrl: data.pageUrl || "",
+      referrer: data.source || "Website Order",
+      device: data.device || (/Mobi|Android|iPhone|iPad/i.test(String(data.userAgent || "")) ? "Mobile" : "Desktop"),
+      browser: data.browser || "-",
+      sessionDuration: data.timeSpent || "1 min",
+      visitCount: 1
+    }, dateStr);
+  } catch (ue) {}
+
   // Also record Pixel Event automatically for purchase / contact lead
   try {
     var pSheet = getOrCreateSheet_(ss, TAB_PIXEL);
@@ -292,7 +308,7 @@ function handlePixelData_(ss, data, dateStr) {
  */
 function handleUserActivity_(ss, data, dateStr) {
   var aSheet = getOrCreateSheet_(ss, TAB_ACTIVITY);
-  if (aSheet.getLastRow() < 4) {
+  if (aSheet.getLastRow() < 2) {
     formatActivitySheetDesign(aSheet);
   }
 
@@ -301,12 +317,13 @@ function handleUserActivity_(ss, data, dateStr) {
   var updated = false;
 
   // If visitor already logged, update duration, visit count & timestamp
-  if (lastRow >= 5) {
-    var vRange = aSheet.getRange(5, 1, Math.min(lastRow - 4, 300), 1).getValues();
+  if (lastRow >= 3) {
+    var vRange = aSheet.getRange(3, 1, Math.min(lastRow - 2, 500), 1).getValues();
     for (var r = vRange.length - 1; r >= 0; r--) {
       if (vRange[r][0] === vId) {
-        var targetRow = r + 5;
-        aSheet.getRange(targetRow, 6).setValue(data.visitCount || 1);
+        var targetRow = r + 3;
+        var currentCount = Number(aSheet.getRange(targetRow, 6).getValue()) || 1;
+        aSheet.getRange(targetRow, 6).setValue(currentCount + 1);
         aSheet.getRange(targetRow, 7).setValue(clean_(data.sessionDuration || data.stayTime || data.timeSpent || "0s", 50));
         aSheet.getRange(targetRow, 8).setValue(dateStr);
         updated = true;
@@ -316,12 +333,16 @@ function handleUserActivity_(ss, data, dateStr) {
   }
 
   if (!updated) {
+    var referrerVal = clean_(data.referrer || data.source || "Direct", 150);
+    var deviceVal = clean_(data.device || (/Mobi|Android|iPhone|iPad/i.test(String(data.userAgent || "")) ? "Mobile" : "Desktop"), 40);
+    var browserVal = clean_(data.browser || (data.fbp ? "Meta/Browser" : "Chrome/Web"), 40);
+
     aSheet.appendRow([
       vId,
       clean_(data.pageUrl || "", 250),
-      clean_(data.referrer || "Direct", 150),
-      clean_(data.device || "Desktop", 40),
-      clean_(data.browser || "-", 40),
+      referrerVal,
+      deviceVal,
+      browserVal,
       data.visitCount || 1,
       clean_(data.sessionDuration || data.stayTime || data.timeSpent || "0s", 50),
       dateStr
@@ -445,6 +466,9 @@ function formatOrdersSheetDesign(optParam) {
   for (var r = 5; r <= lastR; r++) {
     formatOrderDataRow_(sheet, r);
   }
+
+  // Apply dropdown data validation and color coding across column 10 (Order Status)
+  applyOrderStatusFormatting_(sheet);
 
   return sheet;
 }
@@ -700,8 +724,120 @@ function formatOrderDataRow_(sheet, rowIndex) {
     sheet.getRange(rowIndex, 7).setNumberFormat('"৳"#,##0');
     sheet.getRange(rowIndex, 8).setNumberFormat('"৳"#,##0').setFontWeight("bold");
     sheet.getRange(rowIndex, 9).setHorizontalAlignment("center");
-    sheet.getRange(rowIndex, 10).setHorizontalAlignment("center").setFontWeight("bold");
+    
+    // Column 10: Order Status with interactive dropdown
+    var statusCell = sheet.getRange(rowIndex, 10);
+    statusCell.setHorizontalAlignment("center").setFontWeight("bold");
+    try {
+      statusCell.setDataValidation(getOrderStatusValidationRule_());
+    } catch (ve) {}
   } catch (e) {}
+}
+
+/**
+ * Order Status Options & Dropdown Rules
+ */
+var ORDER_STATUSES = [
+  "Pending",
+  "Processing",
+  "Confirmed",
+  "Shipped",
+  "Delivered",
+  "Completed",
+  "Cancelled",
+  "Returned"
+];
+
+function getOrderStatusValidationRule_() {
+  return SpreadsheetApp.newDataValidation()
+    .requireValueInList(ORDER_STATUSES, true)
+    .setAllowInvalid(true)
+    .build();
+}
+
+/**
+ * Apply Order Status Dropdown & Color Formatting across Order Data tab
+ */
+function applyOrderStatusFormatting_(sheet) {
+  try {
+    var maxR = Math.max(100, sheet.getMaxRows());
+    var numRowsToValidate = maxR - 4;
+    if (numRowsToValidate > 0) {
+      var statusColRange = sheet.getRange(5, 10, numRowsToValidate, 1);
+      statusColRange.setDataValidation(getOrderStatusValidationRule_());
+    }
+
+    // Apply conditional formatting rules for visual color tags
+    var statusRuleRange = sheet.getRange("J5:J" + maxR);
+    var existingRules = sheet.getConditionalFormatRules() || [];
+    var filteredRules = [];
+
+    for (var i = 0; i < existingRules.length; i++) {
+      var r = existingRules[i];
+      var rngs = r.getRanges();
+      var isStatusRng = false;
+      for (var j = 0; j < rngs.length; j++) {
+        if (rngs[j].getColumn() === 10) {
+          isStatusRng = true;
+          break;
+        }
+      }
+      if (!isStatusRng) {
+        filteredRules.push(r);
+      }
+    }
+
+    var colorTags = [
+      { text: "Pending", bg: "#FEF3C7", fg: "#92400E" },     // Amber / Yellow
+      { text: "Processing", bg: "#DBEAFE", fg: "#1E40AF" },  // Soft Blue
+      { text: "Confirmed", bg: "#E0F2FE", fg: "#0369A1" },   // Cyan
+      { text: "Shipped", bg: "#EDE9FE", fg: "#6D28D9" },     // Purple
+      { text: "Delivered", bg: "#DCFCE7", fg: "#166534" },   // Green
+      { text: "Completed", bg: "#D1FAE5", fg: "#065F46" },   // Emerald
+      { text: "Cancelled", bg: "#FEE2E2", fg: "#991B1B" },   // Red
+      { text: "Returned", bg: "#FFE4E6", fg: "#9F1239" }     // Rose
+    ];
+
+    for (var k = 0; k < colorTags.length; k++) {
+      var tag = colorTags[k];
+      var cRule = SpreadsheetApp.newConditionalFormatRule()
+        .whenTextEqualTo(tag.text)
+        .setBackground(tag.bg)
+        .setFontColor(tag.fg)
+        .setBold(true)
+        .setRanges([statusRuleRange])
+        .build();
+      filteredRules.push(cRule);
+    }
+
+    sheet.setConditionalFormatRules(filteredRules);
+  } catch (err) {}
+}
+
+function reapplyOrderStatusDropdowns() {
+  var ss = getSpreadsheet_();
+  var sheet = ss.getSheetByName(TAB_ORDERS);
+  if (sheet) {
+    applyOrderStatusFormatting_(sheet);
+    try {
+      SpreadsheetApp.getActiveSpreadsheet().toast("Order Status dropdowns & color tags updated!", "ASCHII CRM", 5);
+    } catch(e) {}
+  }
+}
+
+/**
+ * Real-time onEdit Trigger
+ * Automatically recalculates Monthly Report when Order Status is changed in Order Data tab
+ */
+function onEdit(e) {
+  try {
+    if (!e || !e.range) return;
+    var sheet = e.range.getSheet();
+    if (!sheet) return;
+    if (sheet.getName() === TAB_ORDERS && e.range.getColumn() === 10 && e.range.getRow() >= 5) {
+      updateMonthlyReportTab(sheet.getParent());
+    }
+  } catch (err) {}
 }
 
 function formatBasicDataRow_(sheet, rowIndex, numCols) {

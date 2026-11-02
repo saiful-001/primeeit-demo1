@@ -1123,8 +1123,11 @@
 
       var payload = {
         action: "track",
+        type: "activity",
+        visitorId: sessionId,
         sessionId: sessionId,
         stayTime: formatStay(sec),
+        sessionDuration: formatStay(sec),
         selectedProducts: getSelectedProductsList(),
         ordered: orderStatus,
         pixelEvent: latestPixelEvent,
@@ -1135,9 +1138,12 @@
         campaign: utmCampaign,
         adContent: utmContent,
         device: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
+        browser: /Chrome/i.test(navigator.userAgent) ? "Chrome" : (/Safari/i.test(navigator.userAgent) ? "Safari" : (/Firefox/i.test(navigator.userAgent) ? "Firefox" : "Browser")),
         source: getTrafficSource(),
+        referrer: document.referrer || "Direct",
         pageUrl: window.location.href,
-        trackingSheetUrl: trkConfig.sheetUrl || ""
+        sheetUrl: C.sheetUrl || "",
+        trackingSheetUrl: trkConfig.sheetUrl || C.sheetUrl || ""
       };
 
       try {
@@ -1170,10 +1176,10 @@
       sendTracking(orderId, "Purchase");
     };
 
-    // ১. পেজ লোড হওয়ার ৫ সেকেন্ড পর প্রথম লগ পাঠানো
+    // ১. পেজ লোড হওয়ার ১.৫ সেকেন্ড পর প্রথম User Activity লগ পাঠানো
     setTimeout(function () {
       sendTracking();
-    }, 5000);
+    }, 1500);
 
     // ২. নির্দিষ্ট সময় পরপর অটো-আপডেট (ডিফল্ট: প্রতি ৩০ সেকেন্ড)
     var intervalSec = (trkConfig.heartbeatInterval || 30) * 1000;

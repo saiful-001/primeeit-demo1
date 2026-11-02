@@ -17,7 +17,7 @@
    ========================================================================= */
 
 // আপনার মূল Google Sheet-এর সম্পূর্ণ ব্রাউজার লিংকটি এখানে দিন:
-var SPREADSHEET_ID ="https://docs.google.com/spreadsheets/d/1xXazNKGK0GCdoWG8VH3J8Ks8aGRl3R4krrLtqaZsUrA/edit?gid=0#gid=0";
+var SPREADSHEET_ID ="https://docs.google.com/spreadsheets/d/1F5j8f2od2g7_QY3tv4TXwdxAsFl0729CYUWExqzuwyk/edit?gid=0#gid=0";
 
 // যে শিট/ট্যাবে অর্ডার জমা হবে সেটির নাম (ডিফল্ট: "Orders"):
 var SHEET_NAME = "Orders";
