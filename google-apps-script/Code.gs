@@ -1,1633 +1,652 @@
 /**
  * =========================================================================
- * খাঁটি মধু ও প্রিমিয়াম হানি নাট – ব্যাকএন্ড (Code.gs)
- * ASCHII SOLUTION • Facebook Pixel & Order CRM
- * =========================================================================
- * 
- * 📌 করণীয় (৩টি সহজ ধাপ):
- * ১. নিচের SPREADSHEET_ID তে আপনার গুগল শিটের সম্পূর্ণ লিংকটি দিন।
- * ২. উপরে Save (💾) করে Deploy ➔ New deployment এ যান:
- *    - Type: Web app
- *    - Execute as: Me
- *    - Who has access: Anyone
- *    - Deploy বাটনে ক্লিক করে পারমিশন Allow দিন।
- * ৩. প্রাপ্ত Web app URL (/exec লিংক) কপি করে js/config.js এর apiEndpoint এ বসিয়ে দিন।
+ * 🌐 UNIVERSAL GOOGLE APPS SCRIPT BACKEND (Code.gs)
+ * Organizes incoming data into 4 Clean Tabs:
+ * 1. "Order Data"
+ * 2. "Pixel Data"
+ * 3. "User Activity"
+ * 4. "Monthly Report"
+ *
+ * Supports Universal Website Types:
+ * - Agency Portfolio
+ * - CV / Personal Portfolio
+ * - Product Selling Website
  * =========================================================================
  */
 
-/* =========================================================================
-   ১. গুগল শিট লিংক সেটিংস (GOOGLE SHEET SETTINGS)
-   =========================================================================
-   💡 সহজ সুবিধা:
-   শিট লিংক পরিবর্তন করতে আলাদা "Config.gs" ফাইলে যান।
-   যদি আলাদা Config.gs ফাইল না থাকে তবে নিচের ডিফল্ট ভ্যালু কাজ করবে।
-   ========================================================================= */
+// Global Sheet Tab Names (Customizable or via Config.gs)
+var TAB_ORDERS = typeof TAB_ORDERS !== "undefined" ? TAB_ORDERS : "Order Data";
+var TAB_PIXEL = typeof TAB_PIXEL !== "undefined" ? TAB_PIXEL : "Pixel Data";
+var TAB_ACTIVITY = typeof TAB_ACTIVITY !== "undefined" ? TAB_ACTIVITY : "User Activity";
+var TAB_MONTHLY = typeof TAB_MONTHLY !== "undefined" ? TAB_MONTHLY : "Monthly Report";
 
-if (typeof SPREADSHEET_ID === "undefined" || !SPREADSHEET_ID) {
-  var SPREADSHEET_ID = "https://docs.google.com/spreadsheets/d/1Ehh9d1jxOlEC2Szg9bsU8S-fGPQ-qPRApas0ItsG120/edit?gid=0#gid=0";
-}
-if (typeof SHEET_NAME === "undefined" || !SHEET_NAME) {
-  var SHEET_NAME = "Orders";
-}
-if (typeof CURRENCY === "undefined" || !CURRENCY) {
-  var CURRENCY = "৳";
-}
-if (typeof TRACKING_SPREADSHEET_ID === "undefined") {
-  var TRACKING_SPREADSHEET_ID = "";
-}
-if (typeof TRACKING_SHEET_NAME === "undefined" || !TRACKING_SHEET_NAME) {
-  var TRACKING_SHEET_NAME = "Visitors";
-}
-
-/* =========================================================================
-   ২. পণ্যের তালিকা ও মূল্য নির্ধারণ (PRODUCTS & PRICES)
-   =========================================================================
-   - এখানে মধু এবং হানি নাটের বিভিন্ন সাইজের মূল্য নির্ধারণ করুন।
-   - ওয়েবসাইটের js/config.js ফাইলের সাথে এই আইডি (id) এবং দাম (price) মিল থাকতে হবে।
-   - Server-side verification: কাস্টমার ওয়েবসাইট থেকে যাই পাঠাক, এখানে দেওয়া দামেই হিসাব হবে।
-*/
-var PRODUCTS_CONFIG = {
-  // --- খাঁটি মধু (Pure Honey) ---
-  m500: {
-    id: "m500",
-    name: "খাঁটি সুন্দরবন মধু (৫০০ গ্রাম)",
-    category: "honey",
-    weight: "500g",
-    price: 650,
-    regularPrice: 750,
-  },
-  m1000: {
-    id: "m1000",
-    name: "খাঁটি সুন্দরবন মধু (১ কেজি)",
-    category: "honey",
-    weight: "1kg",
-    price: 1200,
-    regularPrice: 1400,
-  },
-  m2000: {
-    id: "m2000",
-    name: "খাঁটি সুন্দরবন মধু (২ কেজি ফ্যামিলি প্যাক)",
-    category: "honey",
-    weight: "2kg",
-    price: 2300,
-    regularPrice: 2800,
-  },
-
-  // --- প্রিমিয়াম হানি নাট (Premium Honey Nut) ---
-  hn500: {
-    id: "hn500",
-    name: "প্রিমিয়াম হানি নাট (৫০০ গ্রাম)",
-    category: "honeynut",
-    weight: "500g",
-    price: 750,
-    regularPrice: 850,
-  },
-  hn1000: {
-    id: "hn1000",
-    name: "প্রিমিয়াম হানি নাট (১ কেজি)",
-    category: "honeynut",
-    weight: "1kg",
-    price: 1400,
-    regularPrice: 1650,
-  },
-  hn2000: {
-    id: "hn2000",
-    name: "প্রিমিয়াম হানি নাট (২ কেজি মেগা প্যাক)",
-    category: "honeynut",
-    weight: "2kg",
-    price: 2700,
-    regularPrice: 3300,
-  },
-};
-
-/* =========================================================================
-   ৩. ডেলিভারি চার্জ ও শিপিং সেটিংস (SHIPPING & DELIVERY CHARGES)
-   =========================================================================
-*/
-var SHIPPING_CONFIG = {
-  dhaka: {
-    id: "dhaka",
-    label: "ঢাকার ভিতরে",
-    charge: 70,
-  },
-  sub: {
-    id: "sub",
-    label: "ঢাকার আশেপাশে (সাভার, কেরানীগঞ্জ, গাজীপুর, নারায়ণগঞ্জ)",
-    charge: 100,
-  },
-  outside: {
-    id: "outside",
-    label: "ঢাকার বাইরে (সারাদেশ)",
-    charge: 130,
-  },
-};
-
-// ফ্রি ডেলিভারি অফার: কত টাকার বেশি কিনলে ডেলিভারি চার্জ ফ্রি (০ টাকা) হবে?
-var FREE_SHIPPING_MIN_TOTAL = 0;
-
-// একজন কাস্টমার প্রতিটি পণ্য সর্বোচ্চ কত পিস অর্ডার করতে পারবে
-var MAX_QTY_PER_ITEM = 20;
-
-/* =========================================================================
-   ৪. ফ্রড এলার্ট ও স্প্যাম প্রতিরোধ সেটিংস (FRAUD & SPAM PROTECTION)
-   =========================================================================
-*/
-var FRAUD_PROTECTION = {
-  enabled: true,
-  cooldownMinutes: 15,
-};
-
-/* =========================================================================
-   ৫. গুগল শিটের কলাম হেডার (SHEET TABLE HEADERS - ASCHII SOLUTION CRM)
-   =========================================================================
-   - বাম পাশ (Left Side): অর্ডার ও কাস্টমার সম্পর্কিত তথ্য (১৪টি কলাম)
-   - ডান পাশ (Right Side): ফেসবুক পিক্সেল ও ট্র্যাকিং সম্পর্কিত তথ্য (১০টি কলাম)
-   - মোট ২৪টি কলাম পাশাপাশি সাজানো থাকে।
-*/
-var ORDER_HEADERS = [
-  "Order ID",           // ১. অর্ডার নম্বর (যেমন: HN-261026-0001)
-  "Date & Time",        // ২. অর্ডার করার তারিখ ও সময়
-  "Customer Name",      // ৩. কাস্টমারের নাম
-  "Phone Number",       // ৪. মোবাইল নাম্বার
-  "District / Area",    // ৫. জেলা / এলাকা
-  "Full Address",       // ৬. সম্পূর্ণ ঠিকানা
-  "Ordered Products",   // ৭. কি কি পণ্য অর্ডার করেছে এবং কত পিস
-  "Total Items (Qty)",  // ৮. সর্বমোট পণ্যের সংখ্যা
-  "Products Subtotal",  // ৯. পণ্যের মোট দাম
-  "Delivery Method",    // ১০. ডেলিভারি এলাকা
-  "Delivery Charge",    // ১১. ডেলিভারি চার্জ
-  "Grand Total Bill",   // ১২. সর্বমোট বিল (Subtotal + Delivery Charge)
-  "Customer Note",      // ১৩. কাস্টমারের বিশেষ নির্দেশনা
-  "Order Status",       // ১৪. অর্ডারের অবস্থা (New / Processing / Delivered / Cancelled)
+// Tab Headers as requested:
+var HEADERS_ORDER = [
+  "Order ID",
+  "Customer Name",
+  "Phone",
+  "Email",
+  "Address",
+  "Product / Service",
+  "Price",
+  "Quantity",
+  "Total Amount",
+  "Order Status",
+  "Date & Time"
 ];
 
-var PIXEL_HEADERS = [
-  "FB Click ID (fbclid)", // ১৫. ফেসবুক অ্যাড ক্লিক আইডি
-  "FB Browser ID (_fbp)", // ১৬. ফেসবুক পিক্সেল ব্রাউজার আইডি (_fbp)
-  "FB Cookie ID (_fbc)",  // ১৭. ফেসবুক পিক্সেল ক্লিক কুকি আইডি (_fbc)
-  "Pixel Event",          // ১৮. পিক্সেল ইভেন্ট (Purchase / AddToCart / InitiateCheckout)
-  "Campaign Name",        // ১৯. ফেসবুক ক্যাম্পেইন নাম (utm_campaign)
-  "Ad Content",           // ২০. বিজ্ঞাপন কনটেন্ট / অডিয়েন্স (utm_content)
-  "Traffic Source",       // ২১. ভিজিটর সোর্স / UTM প্যারামিটার
-  "Session ID",           // ২২. ভিজিটর সেশন আইডি
-  "Time Spent",           // ২৩. পেজে অবস্থানের সময়
-  "Landing Page URL"      // ২৪. ল্যান্ডিং পেজের সম্পূর্ণ লিংক
+var HEADERS_PIXEL = [
+  "Event Name",
+  "Event ID",
+  "Page URL",
+  "Product / Value",
+  "Visitor ID",
+  "Device",
+  "Browser",
+  "UTM Source",
+  "UTM Campaign",
+  "Date & Time"
 ];
 
-// সর্বমোট ২৪টি কলাম
-var HEADERS = ORDER_HEADERS.concat(PIXEL_HEADERS);
-
-// সেশন ও ভিজিটর বিহেভিয়ার ট্র্যাকিং টেবিল হেডার (Visitors Tab)
-var TRACKING_HEADERS = [
-  "Session ID",           // অনন্য সেশন আইডি
-  "Last Updated",         // শেষ আপডেট সময়
-  "Time Spent",           // পেইজে কতক্ষণ ছিল
-  "Selected Products",    // চেকআউটে আনা বা সিলেক্ট করা পণ্য
-  "Order Completed?",     // অর্ডার করেছে কি না (হ্যাঁ / না)
-  "Pixel Event",          // সর্বশেষ ফেসবুক পিক্সেল ইভেন্ট
-  "Customer Phone",       // মোবাইল নাম্বার
-  "FB Click ID (fbclid)", // ফেসবুক অ্যাডস ক্লিক আইডি
-  "FB Browser ID (_fbp)", // ফেসবুক পিক্সেল ব্রাউজার কুকি (_fbp)
-  "FB Cookie ID (_fbc)",  // ফেসবুক পিক্সেল ক্লিক কুকি (_fbc)
-  "Campaign Name",        // ক্যাম্পেইন নাম (utm_campaign)
-  "Ad Content",           // বিজ্ঞাপন বা অডিয়েন্স ক্রিয়েটিভ (utm_content)
-  "Device",               // ডিভাইস (Mobile / Desktop)
-  "Traffic Source",       // ভিজিটর কোথা থেকে এসেছে (Facebook Ads / Google / Direct)
-  "Landing Page URL"      // পেজের সম্পূর্ণ লিংক
+var HEADERS_ACTIVITY = [
+  "Visitor ID",
+  "Page URL",
+  "Referrer",
+  "Device",
+  "Browser",
+  "Visit Count",
+  "Session Duration",
+  "Button Clicks",
+  "Date & Time"
 ];
 
-/* =========================================================================
-   ৬. কোর ব্যাকএন্ড কোড (CORE BACKEND LOGIC)
-   ========================================================================= */
+var HEADERS_MONTHLY = [
+  "Date",
+  "Total Orders",
+  "Total Contacts",
+  "Total Visitors",
+  "Total Revenue",
+  "Completed Orders",
+  "Pending Orders"
+];
 
-// গুগল শিট ওপেন করলে ওপরে সরাসরি "✨ ASCHII SOLUTION" মেনু যুক্ত হবে
+/**
+ * Menu bar on Google Sheets UI
+ */
 function onOpen() {
   try {
     var ui = SpreadsheetApp.getUi();
-    ui.createMenu("✨ ASCHII SOLUTION")
-      .addItem("🎨 Redesign Sheet (Modern Dashboard)", "redesignOrderSheetUI")
-      .addItem("📊 Refresh KPI Cards & Formulas", "formatOrderSheetDesign")
+    ui.createMenu("✨ ASCHII SOLUTION CRM")
+      .addItem("🎨 Initialize / Format 4 Tabs", "setupAllFourTabs")
+      .addItem("📊 Refresh Monthly Summary Report", "updateMonthlyReportTab")
       .addSeparator()
-      .addSubMenu(ui.createMenu("📅 Date-wise Filters (তারিখ ফিল্টার)")
-        .addItem("📌 আজকের অর্ডার (Today's Orders)", "filterOrdersToday")
-        .addItem("📌 গতকালের অর্ডার (Yesterday's Orders)", "filterOrdersYesterday")
-        .addItem("📌 চলতি মাসের অর্ডার (This Month)", "filterOrdersThisMonth")
-        .addItem("📌 নির্দিষ্ট তারিখ ফিল্টার (Custom Date)", "filterOrdersCustomDate")
-        .addSeparator()
-        .addItem("🔄 সব অর্ডার দেখুন (Show All Orders)", "clearOrderFilter"))
-      .addSeparator()
-      .addItem("📅 Format Date Report Tab", "formatDateReportSheetDesign")
-      .addItem("📱 Format Mobile View Tab", "formatMobileViewSheetDesign")
-      .addItem("📑 Format Visitors Tracking Tab", "formatTrackingSheetDesign")
+      .addSubMenu(ui.createMenu("📅 Date-wise Filters")
+        .addItem("📌 Today's Orders", "filterTodayOrders")
+        .addItem("📌 Yesterday's Orders", "filterYesterdayOrders")
+        .addItem("📌 This Month", "filterThisMonthOrders")
+        .addItem("🔄 Clear Filter (Show All)", "clearOrderFilters"))
       .addToUi();
   } catch (e) {}
 }
 
-// ম্যানুয়াল রান করার ফাংশন
-function redesignOrderSheetUI() {
-  var msg = formatOrderSheetDesign();
-  try {
-    SpreadsheetApp.getUi().alert("সফলতা!", msg, SpreadsheetApp.getUi().ButtonSet.OK);
-  } catch (e) {}
-  return msg;
-}
-
-// API টেস্ট করার ফাংশন
+/**
+ * Handle GET requests for Testing Connection, Ping, and Monthly Summaries
+ */
 function doGet(e) {
   try {
-    var sheet = getSheet_();
-    var ss = sheet.getParent();
+    var action = (e && e.parameter && e.parameter.action) || "ping";
+    var ss = getSpreadsheet_(e && e.parameter && e.parameter.sheetUrl);
 
-    // ব্রাউজার থেকে ?action=format বা ?format=1 বা ?action=redesign দিলে পুরো শিট ডিজাইন অটো-ফরমেট হবে
-    var isFormatRequest =
-      e &&
-      e.parameter &&
-      (e.parameter.action === "format" || e.parameter.format === "1" || e.parameter.action === "redesign");
-    if (isFormatRequest) {
-      formatOrderSheetDesign(sheet);
+    if (action === "ping" || action === "test") {
+      return jsonResponse_({
+        success: true,
+        message: "Google Sheets CRM Connection Successful!",
+        sheetName: ss.getName(),
+        sheetUrl: ss.getUrl(),
+        timestamp: new Date().toISOString()
+      });
     }
 
-    if (e && e.parameter && e.parameter.action === "format_tracking") {
-      var trkSheet = getTrackingSheet_();
-      formatTrackingSheetDesign(trkSheet);
+    if (action === "init_tabs" || action === "format") {
+      setupAllFourTabs(ss);
+      return jsonResponse_({
+        success: true,
+        message: "All 4 Tabs (Order Data, Pixel Data, User Activity, Monthly Report) initialized successfully!"
+      });
     }
 
-    return json_({
+    if (action === "summary" || action === "report") {
+      var summary = calculateSummaryStats_(ss);
+      return jsonResponse_({
+        success: true,
+        summary: summary
+      });
+    }
+
+    return jsonResponse_({
       success: true,
-      message: "ASCHII SOLUTION • Honey Order & Facebook Pixel API চালু রয়েছে!",
-      connectedSpreadsheetName: ss.getName(),
-      connectedSpreadsheetUrl: ss.getUrl(),
-      targetTabName: sheet.getName(),
-      totalOrdersInSheet: Math.max(0, sheet.getLastRow() - 4),
-      fraudProtection: FRAUD_PROTECTION.enabled
-        ? "চালু আছে (" + FRAUD_PROTECTION.cooldownMinutes + " মিনিট কুলডাউন)"
-        : "বন্ধ",
-      visitorTracking: "সফলভাবে চালু আছে (" + (TRACKING_SHEET_NAME || "Visitors") + " ট্যাব)",
-      oneClickFormatUrl: ss.getUrl(),
-      time: new Date().toISOString(),
+      message: "API is active and operational.",
+      timestamp: new Date().toISOString()
     });
   } catch (err) {
-    return json_({
+    return jsonResponse_({
       success: false,
-      error: "গুগল শিটের সাথে সংযোগে সমস্যা: " + err.message,
+      error: "Error: " + err.message
     });
   }
 }
 
-// ওয়েবসাইট থেকে অর্ডার সাবমিট ও ভিজিটর ট্র্যাকিং গ্রহণ করার ফাংশন
+/**
+ * Handle POST submissions from website: Orders, Batch Events, Activity, Pixel
+ */
 function doPost(e) {
   var lock = LockService.getScriptLock();
   try {
-    lock.waitLock(20000);
+    // Wait up to 30s to handle high concurrent submissions without losing data
+    lock.waitLock(30000);
 
-    var rawData = (e && e.postData && e.postData.contents) || "{}";
-    var data = JSON.parse(rawData);
+    var raw = (e && e.postData && e.postData.contents) || "{}";
+    var payload = JSON.parse(raw);
 
-    // ★ সেশন ও ভিজিটর বিহেভিয়ার ট্র্যাকিং হ্যান্ডলার
-    if (data.action === "track" || data.type === "track") {
-      return handleTracking_(data);
-    }
-
-    // ১. তথ্য যাচাইকরণ
-    var validationError = validateOrder_(data);
-    if (validationError) {
-      return json_({ success: false, error: validationError });
-    }
-
-    var cleanPhone = normPhone_(data.phone);
-
-    // ২. ফ্রড এলার্ট ও ডুপ্লিকেট স্প্যাম প্রটেকশন
-    if (FRAUD_PROTECTION && FRAUD_PROTECTION.enabled) {
-      var cache = CacheService.getScriptCache();
-      var cacheKey = "honey_guard_" + cleanPhone;
-      var existingOrderId = cache.get(cacheKey);
-
-      if (existingOrderId) {
-        return json_({
-          success: false,
-          fraudAlert: true,
-          error:
-            "আপনি ইতিমধ্যে একটি অর্ডার সম্পন্ন করেছেন (অর্ডার নং: " +
-            existingOrderId +
-            ")। অনুগ্রহ করে " +
-            FRAUD_PROTECTION.cooldownMinutes +
-            " মিনিট পর পুনরায় চেষ্টা করুন অথবা সরাসরি আমাদের কাস্টমার কেয়ারে কল করুন।",
-        });
+    // Support single item or batch submission queue
+    if (payload.batch && Array.isArray(payload.items)) {
+      var batchResults = [];
+      for (var b = 0; b < payload.items.length; b++) {
+        var subItem = payload.items[b];
+        batchResults.push(processSinglePayload_(subItem));
       }
+      return jsonResponse_({ success: true, batchCount: batchResults.length, results: batchResults });
     }
 
-    // ৩. পণ্য এবং পরিমাণ নির্ধারণ
-    var orderedItems = parseOrderedItems_(data);
-    if (orderedItems.length === 0) {
-      return json_({
-        success: false,
-        error: "অনুগ্রহ করে কমপক্ষে একটি পণ্য সিলেক্ট করুন।",
-      });
-    }
-
-    // ৪. পণ্যের মোট মূল্য (Subtotal) হিসাব
-    var subtotal = 0;
-    var totalQty = 0;
-    var itemsSummaryParts = [];
-
-    for (var i = 0; i < orderedItems.length; i++) {
-      var itm = orderedItems[i];
-      var conf = PRODUCTS_CONFIG[itm.id];
-      var lineTotal = conf.price * itm.qty;
-      subtotal += lineTotal;
-      totalQty += itm.qty;
-      itemsSummaryParts.push(
-        conf.name + " (" + conf.weight + ") x " + itm.qty + " পিস = " + CURRENCY + lineTotal
-      );
-    }
-
-    var itemsSummaryString = itemsSummaryParts.join("\n");
-
-    // ৫. ডেলিভারি চার্জ নির্ধারণ
-    var shippingKey = data.shippingId || "dhaka";
-    var shippingInfo = SHIPPING_CONFIG[shippingKey] || SHIPPING_CONFIG["dhaka"];
-    var shippingCharge = shippingInfo.charge;
-
-    // ফ্রি ডেলিভারি অফার চেক
-    if (FREE_SHIPPING_MIN_TOTAL > 0 && subtotal >= FREE_SHIPPING_MIN_TOTAL) {
-      shippingCharge = 0;
-    }
-
-    // ৬. সর্বমোট বিল (Grand Total)
-    var grandTotal = subtotal + shippingCharge;
-
-    // ৭. গুগল শিটে অর্ডার সংরক্ষণ (ওয়েবসাইট থেকে নির্দিষ্ট sheetUrl পাঠানো হলে সেখানেই সংরক্ষণ হবে)
-    var targetSheetUrl = data.sheetUrl || SPREADSHEET_ID;
-    var sheet = getSheet_(targetSheetUrl);
-    var orderId = nextOrderId_(sheet);
-    var orderDate = Utilities.formatDate(
-      new Date(),
-      "Asia/Dhaka",
-      "dd-MMM-yyyy hh:mm a"
-    );
-
-    sheet.appendRow([
-      // --- বাম পাশ: অর্ডার তথ্য (Left Side: Order Information) ---
-      orderId,                                    // ১. Order ID
-      orderDate,                                  // ২. Date & Time
-      clean_(data.name, 100),                     // ৩. Customer Name
-      "'" + cleanPhone,                           // ৪. Phone Number
-      clean_(data.district, 80),                  // ৫. District / Area
-      clean_(data.address, 350),                  // ৬. Full Address
-      itemsSummaryString,                         // ৭. Ordered Products
-      totalQty,                                   // ৮. Total Items (Qty)
-      subtotal,                                   // ৯. Products Subtotal
-      shippingInfo.label,                         // ১০. Delivery Method
-      shippingCharge,                             // ১১. Delivery Charge
-      grandTotal,                                 // ১২. Grand Total Bill
-      clean_(data.note || "কোনো নোট নেই", 300),   // ১৩. Customer Note
-      "New",                                      // ১৪. Order Status
-
-      // --- ডান পাশ: ফেসবুক পিক্সেল তথ্য (Right Side: Facebook Pixel Information) ---
-      clean_(data.fbclid || "নাই", 160),          // ১৫. FB Click ID (fbclid)
-      clean_(data.fbp || "নাই", 100),             // ১৬. FB Browser ID (_fbp)
-      clean_(data.fbc || "নাই", 120),             // ১৭. FB Cookie ID (_fbc)
-      clean_(data.pixelEvent || "Purchase", 50),  // ১৮. Pixel Event
-      clean_(data.campaign || "নাই", 120),        // ১৯. Campaign Name
-      clean_(data.adContent || "নাই", 120),       // ২০. Ad Content
-      clean_(data.source || "Direct Visit", 120), // ২১. Traffic Source
-      clean_(data.sessionId || "নাই", 100),       // ২২. Session ID
-      clean_(data.timeSpent || "১ মিনিট", 60),    // ২৩. Time Spent
-      clean_(data.pageUrl || "", 300)             // ২৪. Landing Page URL
-    ]);
-
-    SpreadsheetApp.flush();
-
-    // ৮. নতুন সারির ডিজাইন ও প্রফেশনাল ফরম্যাটিং স্বয়ংক্রিয়ভাবে প্রয়োগ করা
-    formatSingleRow_(sheet, sheet.getLastRow());
-
-    // ৯. ফ্রড গার্ড ক্যাশে ফোন নাম্বার সংরক্ষণ
-    if (FRAUD_PROTECTION && FRAUD_PROTECTION.enabled) {
-      try {
-        var cooldownSec = Math.max(60, FRAUD_PROTECTION.cooldownMinutes * 60);
-        cache.put("honey_guard_" + cleanPhone, orderId, cooldownSec);
-      } catch (cacheErr) {}
-    }
-
-    // ১০. কাস্টমারের কাছে রেসপন্স পাঠানো
-    return json_({
-      success: true,
-      orderId: orderId,
-      subtotal: subtotal,
-      deliveryCharge: shippingCharge,
-      total: grandTotal,
-      itemsCount: totalQty,
-      message: "আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে!",
-    });
+    var result = processSinglePayload_(payload);
+    return jsonResponse_(result);
   } catch (err) {
-    return json_({
+    return jsonResponse_({
       success: false,
-      error: "সার্ভারে সাময়িক সমস্যা হয়েছে: " + err.message,
+      error: "Submission Error: " + err.message
     });
   } finally {
     try {
       lock.releaseLock();
-    } catch (x) {}
+    } catch (ignore) {}
   }
 }
 
 /**
- * রিকোয়েস্ট থেকে অর্ডারকৃত পণ্যের তালিকা পার্স করা
+ * Route individual payload to appropriate sheet tab
  */
-function parseOrderedItems_(d) {
-  var items = [];
+function processSinglePayload_(data) {
+  var ss = getSpreadsheet_(data.sheetUrl);
+  var now = new Date();
+  var dateStr = Utilities.formatDate(now, "Asia/Dhaka", "dd-MMM-yyyy hh:mm a");
 
-  if (Array.isArray(d.items) && d.items.length > 0) {
-    for (var i = 0; i < d.items.length; i++) {
-      var it = d.items[i];
-      if (it && it.id && PRODUCTS_CONFIG[it.id]) {
-        var q = parseInt(it.qty, 10);
-        if (!isNaN(q) && q > 0) {
-          items.push({ id: it.id, qty: Math.min(q, MAX_QTY_PER_ITEM) });
-        }
-      }
-    }
+  var type = (data.type || data.action || "").toLowerCase();
+
+  // 1. Pixel Data Tab
+  if (type === "pixel" || type === "pixel_event") {
+    var pSheet = getOrCreateSheet_(ss, TAB_PIXEL, HEADERS_PIXEL, "#0F172A", "#38BDF8");
+    pSheet.appendRow([
+      clean_(data.eventName || data.event || "PageView", 60),
+      clean_(data.eventId || "EV-" + Date.now(), 60),
+      clean_(data.pageUrl || "", 250),
+      clean_(data.productOrValue || data.value || "-", 100),
+      clean_(data.visitorId || data.sessionId || "-", 60),
+      clean_(data.device || "Desktop", 40),
+      clean_(data.browser || "-", 40),
+      clean_(data.utmSource || data.source || "-", 80),
+      clean_(data.utmCampaign || data.campaign || "-", 100),
+      dateStr
+    ]);
+    formatLastRow_(pSheet);
+    return { success: true, type: "pixel", message: "Pixel logged" };
   }
 
-  if (items.length === 0 && d.packageId && PRODUCTS_CONFIG[d.packageId]) {
-    var qty = parseInt(d.quantity, 10);
-    if (!isNaN(qty) && qty > 0) {
-      items.push({ id: d.packageId, qty: Math.min(qty, MAX_QTY_PER_ITEM) });
-    }
-  }
-
-  return items;
-}
-
-/**
- * ইনপুট ভ্যালিডেশন
- */
-function validateOrder_(d) {
-  if (!d) return "কোনো তথ্য পাঠানো হয়নি।";
-
-  var name = (d.name || "").toString().trim();
-  if (name.length < 2) return "অনুগ্রহ করে আপনার সঠিক পূর্ণ নাম লিখুন।";
-  if (name.length > 100) return "নাম অত্যধিক বড় (সর্বোচ্চ ১০০ অক্ষর)।";
-
-  var rawPhone = (d.phone || "").toString().trim();
-  var cleanPhone = normPhone_(rawPhone);
-  if (!/^01[3-9]\d{8}$/.test(cleanPhone)) {
-    return "অনুগ্রহ করে সঠিক ১১ ডিজিটের সচল বাংলাদেশি মোবাইল নাম্বার দিন (যেমন: 017XXXXXXXX)।";
-  }
-
-  var district = (d.district || "").toString().trim();
-  if (district.length < 2) return "অনুগ্রহ করে আপনার জেলা / এলাকা উল্লেখ করুন।";
-
-  var address = (d.address || "").toString().trim();
-  if (address.length < 5)
-    return "অনুগ্রহ করে আপনার বিস্তারিত পূর্ণ ঠিকানা লিখুন (যেমন: বাসা নং, রোড নং, এলাকা)।";
-
-  return null;
-}
-
-/**
- * ফোন নাম্বার স্ট্যান্ডার্ড ১১ ডিজিট ফরম্যাটে রূপান্তর
- */
-function normPhone_(raw) {
-  if (!raw) return "";
-  var s = raw.toString();
-
-  var bnDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-  for (var i = 0; i < 10; i++) {
-    s = s.split(bnDigits[i]).join(String(i));
-  }
-
-  s = s.replace(/[^0-9]/g, "");
-
-  if (s.indexOf("880") === 0) s = s.substring(2);
-  else if (s.indexOf("+880") === 0) s = s.substring(3);
-
-  if (s.length === 10 && s.indexOf("1") === 0) s = "0" + s;
-
-  return s;
-}
-
-/**
- * গুগল শিট কানেকশন হ্যান্ডলার
- */
-function getSheet_(customUrl) {
-  var ss;
-  var rawId = String(customUrl || SPREADSHEET_ID || "").trim();
-
-  if (rawId.length > 0) {
-    var urlMatch = rawId.match(/\/d\/([a-zA-Z0-9-_]+)/);
-    var cleanId = urlMatch ? urlMatch[1] : rawId;
-    try {
-      ss = SpreadsheetApp.openById(cleanId);
-    } catch (e) {
-      ss = SpreadsheetApp.getActiveSpreadsheet();
-    }
-  } else {
-    ss = SpreadsheetApp.getActiveSpreadsheet();
-  }
-
-  if (!ss) {
-    throw new Error(
-      "কোনো গুগল শিট খুঁজে পাওয়া যায়নি। Code.gs ফাইলের SPREADSHEET_ID-তে আপনার গুগল শিটের সঠিক লিংকটি দিন।"
-    );
-  }
-
-  var sheet = ss.getSheetByName(SHEET_NAME);
-
-  if (!sheet) {
-    var allSheets = ss.getSheets();
-    if (allSheets.length > 0) {
-      var firstSheet = allSheets[0];
-      if (firstSheet.getLastRow() <= 1) {
-        firstSheet.setName(SHEET_NAME);
-        sheet = firstSheet;
-      }
-    }
-  }
-
-  if (!sheet) {
-    sheet = ss.insertSheet(SHEET_NAME);
-  }
-
-  // শিট ফাঁকা থাকলে বা পুরোনো হেডার ফরম্যাটে থাকলে স্বয়ংক্রিয়ভাবে ASCHII SOLUTION মডার্ন ডিজাইনে রূপান্তর
-  if (sheet.getLastRow() === 0) {
-    formatOrderSheetDesign(sheet);
-  } else {
-    try {
-      var needsRedesign = false;
-      var lastCol = sheet.getLastColumn();
-      if (sheet.getLastRow() < 4) {
-        needsRedesign = true;
-      } else {
-        var row4 = sheet.getRange(4, 1, 1, Math.min(lastCol, 3)).getValues()[0];
-        if (String(row4[0]).indexOf("Order ID") === -1) {
-          needsRedesign = true;
-        }
-      }
-      if (needsRedesign) {
-        formatOrderSheetDesign(sheet);
-      }
-    } catch (e) {}
-  }
-
-  return sheet;
-}
-
-/**
- * =========================================================================
- * ৭. ASCHII SOLUTION প্রফেশনাল ডিজাইন ও সাইড-বাই-সাইড CRM ফরম্যাটিং
- * =========================================================================
- * এই ফাংশনটি গুগল শিটকে সরাসরি নতুন রেফারেন্স ড্যাশবোর্ডের মতো আকর্ষণীয় রূপ দেয়:
- * - ওপরে ক্লিন ব্র্যান্ডিং এবং ৫টি লাইভ ডায়নামিক KPI পিল কার্ড (Orders, Revenue, Completed, Pixel, Sync)
- * - পাশাপাশি ২টি সুনির্দিষ্ট সেকশন:
- *   ১. Customer & Order Details (ডিপ টিল এমারেল্ড ব্যানার)
- *   ২. Pixel & Ads Data (ডিপ মিডনাইট নেভি ব্যানার)
- * - সফট স্লেট হেডার, অল্টারনেটিং কালার, কারেন্সি, এবং প্রফেশনাল কালার পিল স্ট্যাটাস ব্যাজ।
- * - মোবাইল অপ্টিমাইজড: কমপ্যাক্ট ফ্রোজেন রো, নিখুঁত কলাম প্রস্থ এবং স্বয়ংক্রিয় "📱 Mobile View" ট্যাব!
- * =========================================================================
- */
-function formatOrderSheetDesign(optSheet) {
-  var sheet = optSheet || getSheet_();
-  var ss = sheet.getParent();
-  var numCols = HEADERS.length; // 24
-  var lastRow = sheet.getLastRow();
-  var lastCol = Math.max(numCols, sheet.getLastColumn() || 1);
-
-  // ১. সকল বিদ্যমান আসল অর্ডার ডাটা নিরাপদভাবে রিড ও সেভ করা (যাতে কোনো ডাটা না হারায়)
-  var existingOrders = [];
-
-  if (lastRow > 0) {
-    var allData = sheet.getRange(1, 1, lastRow, lastCol).getValues();
-    for (var r = 0; r < allData.length; r++) {
-      var row = allData[r];
-      var col0 = String(row[0] || "").trim();
-      var col2 = String(row[2] || "").trim(); // Customer Name
-      var isHeaderOrBanner = 
-        col0.indexOf("ASCHII") > -1 || 
-        col0.indexOf("Order ID") > -1 || 
-        col0.indexOf("Customer") > -1 || 
-        col0.indexOf("Total Orders") > -1;
-      
-      if (!isHeaderOrBanner && (col0.indexOf("HN-") === 0 || col0.indexOf("ORD-") === 0 || (r >= 3 && col2.length > 0))) {
-        var padded = [];
-        for (var c = 0; c < numCols; c++) {
-          padded.push(c < row.length ? row[c] : "-");
-        }
-        existingOrders.push(padded);
-      }
-    }
-  }
-
-  // ২. পুরানো সব মার্জ, ফিল্টার এবং স্টাইল ক্লিয়ার করা যাতে ফ্রেশ নতুন ডিজাইন বসে
-  try {
-    var curFilter = sheet.getFilter();
-    if (curFilter) curFilter.remove();
-  } catch (fe) {}
-
-  sheet.setFrozenRows(0);
-  sheet.clear();
-
-  // ৩. প্রতিটি কলামের নিখুঁত প্রস্থ (Column Widths)
-  var colWidths = [
-    120, // A: Order ID
-    145, // B: Date & Time
-    150, // C: Customer Name
-    130, // D: Phone Number
-    120, // E: District / Area
-    200, // F: Full Address
-    220, // G: Ordered Products
-    85,  // H: Total Items (Qty)
-    110, // I: Products Subtotal
-    115, // J: Delivery Method
-    105, // K: Delivery Charge
-    125, // L: Grand Total Bill
-    150, // M: Customer Note
-    120, // N: Order Status
-    160, // O: FB Click ID (fbclid)
-    140, // P: FB Browser ID (_fbp)
-    140, // Q: FB Cookie ID (_fbc)
-    110, // R: Pixel Event
-    140, // S: Campaign Name
-    130, // T: Ad Content
-    120, // U: Traffic Source
-    120, // V: Session ID
-    100, // W: Time Spent
-    200  // X: Landing Page URL
-  ];
-
-  for (var w = 0; w < colWidths.length; w++) {
-    sheet.setColumnWidth(w + 1, colWidths[w]);
-  }
-
-  // ৪. রো ১: আধুনিক ক্লিন হোয়াইট ব্র্যান্ডিং বার (Row Height: 36px)
-  sheet.setRowHeight(1, 36);
-  var brandRange = sheet.getRange("A1:X1");
-  brandRange.merge()
-    .setBackground("#FFFFFF")
-    .setFontColor("#0F172A")
-    .setFontFamily("Segoe UI")
-    .setHorizontalAlignment("left")
-    .setVerticalAlignment("middle");
-  sheet.getRange("A1").setValue("  🌐 ASCHII SOLUTION - Facebook Pixel Tracker  •  Track Customer Orders & Pixel Events in One Place");
-  sheet.getRange("A1").setFontWeight("bold").setFontSize(11);
-
-  // ৫. রো ২: ৫টি আধুনিক পিল KPI ড্যাশবোর্ড কার্ড (Row Height: 46px)
-  sheet.setRowHeight(2, 46);
-
-  // কার্ড ১: Total Orders (A2:D2)
-  var kpi1 = sheet.getRange("A2:D2");
-  kpi1.merge()
-    .setBackground("#F8FAFC")
-    .setFontFamily("Segoe UI")
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, false, false, "#E2E8F0", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange("A2").setFormula('="🛒 Total Orders" & CHAR(10) & IFERROR(COUNTA(A5:A), 0) & "  (Live)"')
-    .setFontWeight("bold").setFontSize(10.5).setFontColor("#0F172A");
-
-  // কার্ড ২: Total Revenue (E2:I2)
-  var kpi2 = sheet.getRange("E2:I2");
-  kpi2.merge()
-    .setBackground("#F0FDF4")
-    .setFontFamily("Segoe UI")
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, false, false, "#BBF7D0", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange("E2").setFormula('="💵 Total Revenue" & CHAR(10) & "৳ " & TEXT(IFERROR(SUM(L5:L), 0), "#,##0")')
-    .setFontWeight("bold").setFontSize(10.5).setFontColor("#15803D");
-
-  // কার্ড ৩: Completed Orders (J2:N2)
-  var kpi3 = sheet.getRange("J2:N2");
-  kpi3.merge()
-    .setBackground("#FEFCE8")
-    .setFontFamily("Segoe UI")
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, false, false, "#FEF08A", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange("J2").setFormula('="📊 Completed Orders" & CHAR(10) & IFERROR(COUNTIF(N5:N, "Delivered") + COUNTIF(N5:N, "Completed") + COUNTIF(N5:N, "Shipped"), 0) & "  (" & IFERROR(TEXT((COUNTIF(N5:N, "Delivered") + COUNTIF(N5:N, "Completed") + COUNTIF(N5:N, "Shipped")) / MAX(1, COUNTA(A5:A)), "0%"), "0%") & ")"')
-    .setFontWeight("bold").setFontSize(10.5).setFontColor("#A16207");
-
-  // কার্ড ৪: Pixel Event (O2:S2)
-  var kpi4 = sheet.getRange("O2:S2");
-  kpi4.merge()
-    .setBackground("#EFF6FF")
-    .setFontFamily("Segoe UI")
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, false, false, "#BFDBFE", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange("O2").setFormula('="🎯 Pixel Event" & CHAR(10) & "Purchases: " & IFERROR(COUNTIF(R5:R, "Purchase"), 0) & " | Active"')
-    .setFontWeight("bold").setFontSize(10.5).setFontColor("#1D4ED8");
-
-  // কার্ড ৫: Live Real-time Sync (T2:X2)
-  var kpi5 = sheet.getRange("T2:X2");
-  kpi5.merge()
-    .setBackground("#F0FDF4")
-    .setFontFamily("Segoe UI")
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, false, false, "#BBF7D0", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange("T2").setFormula('="🟢 Live Real-time Sync" & CHAR(10) & TEXT(NOW(), "mmm dd, yyyy hh:mm AM/PM")')
-    .setFontWeight("bold").setFontSize(10).setFontColor("#166534");
-
-  // ৬. রো ৩: সেকশন ব্যানার (Row Height: 30px)
-  sheet.setRowHeight(3, 30);
-
-  // ৬.১: বাম পাশের সেকশন হেডার (A3:N3)
-  var orderSection = sheet.getRange("A3:N3");
-  orderSection.merge()
-    .setBackground("#0D4A47")
-    .setFontColor("#FFFFFF")
-    .setFontFamily("Segoe UI")
-    .setFontWeight("bold")
-    .setFontSize(11)
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle");
-  sheet.getRange("A3").setValue("Customer & Order Details");
-
-  // ৬.২: ডান পাশের সেকশন হেডার (O3:X3)
-  var pixelSection = sheet.getRange("O3:X3");
-  pixelSection.merge()
-    .setBackground("#0F172A")
-    .setFontColor("#FFFFFF")
-    .setFontFamily("Segoe UI")
-    .setFontWeight("bold")
-    .setFontSize(11)
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle");
-  sheet.getRange("O3").setValue("Pixel & Ads Data");
-
-  // ৭. রো ৪: কলাম হেডার (Row Height: 34px)
-  sheet.setRowHeight(4, 34);
-
-  var allHeadersRange = sheet.getRange(4, 1, 1, numCols);
-  allHeadersRange.setValues([HEADERS])
-    .setBackground("#F1F5F9")
-    .setFontColor("#1E293B")
-    .setFontFamily("Segoe UI")
-    .setFontWeight("bold")
-    .setFontSize(10)
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, true, true, "#CBD5E1", SpreadsheetApp.BorderStyle.SOLID);
-
-  // ৮. সংরক্ষিত পূর্বের আসল অর্ডারগুলো রো ৫ থেকে যোগ করা
-  if (existingOrders.length > 0) {
-    sheet.getRange(5, 1, existingOrders.length, numCols).setValues(existingOrders);
-  }
-
-  // ৯. ফ্রোজেন রো (মোবাইলে স্ক্রিন জ্যাম না করে মাত্র ৪টি রো ফ্রোজেন)
-  sheet.setFrozenRows(4);
-
-  var finalLastRow = Math.max(5, sheet.getLastRow());
-
-  try {
-    sheet.getRange(4, 1, finalLastRow, numCols).createFilter();
-  } catch (fe) {}
-
-  // ১০. সকল ডাটা রো ফরম্যাটিং করা (রো ৫ থেকে শেষ রো পর্যন্ত)
-  if (finalLastRow >= 5) {
-    for (var r = 5; r <= finalLastRow; r++) {
-      formatSingleRow_(sheet, r);
-    }
-  }
-
-  // ১১. স্ট্যাটাস ও পিক্সেল ব্যাজের জন্য কন্ডিশনাল ফরম্যাটিং রুলস
-  setupStatusConditionalFormatting_(sheet);
-
-  // ১২. মোবাইল ভিউ ও ডেট রিপোর্ট ট্যাব তৈরি বা আপডেট করা
-  formatMobileViewSheetDesign(ss);
-  formatDateReportSheetDesign(ss);
-
-  return "ASCHII SOLUTION প্রফেশনাল ডিজাইন, ডেট ফিল্টার ও মোবাইল ভিউ সফলভাবে সম্পন্ন হয়েছে!";
-}
-
-
-function setupStatusConditionalFormatting_(sheet) {
-  try {
-    var statusColRange = sheet.getRange("N5:N1000");
-    var pixelColRange = sheet.getRange("R5:R1000");
-    var rules = [];
-
-    // Order Status ব্যাজ
-    rules.push(
-      SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("Delivered")
-        .setBackground("#DCFCE7")
-        .setFontColor("#15803D")
-        .setRanges([statusColRange])
-        .build()
-    );
-    rules.push(
-      SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("Completed")
-        .setBackground("#DCFCE7")
-        .setFontColor("#15803D")
-        .setRanges([statusColRange])
-        .build()
-    );
-    rules.push(
-      SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("Shipped")
-        .setBackground("#DBEAFE")
-        .setFontColor("#1D4ED8")
-        .setRanges([statusColRange])
-        .build()
-    );
-    rules.push(
-      SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("Processing")
-        .setBackground("#E0E7FF")
-        .setFontColor("#4338CA")
-        .setRanges([statusColRange])
-        .build()
-    );
-    rules.push(
-      SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("Pending")
-        .setBackground("#FEF3C7")
-        .setFontColor("#B45309")
-        .setRanges([statusColRange])
-        .build()
-    );
-    rules.push(
-      SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("New")
-        .setBackground("#FEF3C7")
-        .setFontColor("#B45309")
-        .setRanges([statusColRange])
-        .build()
-    );
-    rules.push(
-      SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("Cancelled")
-        .setBackground("#FEE2E2")
-        .setFontColor("#B91C1C")
-        .setRanges([statusColRange])
-        .build()
-    );
-
-    // Pixel Event ব্যাজ
-    rules.push(
-      SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("Purchase")
-        .setBackground("#DCFCE7")
-        .setFontColor("#15803D")
-        .setRanges([pixelColRange])
-        .build()
-    );
-    rules.push(
-      SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("InitiateCheckout")
-        .setBackground("#DBEAFE")
-        .setFontColor("#1D4ED8")
-        .setRanges([pixelColRange])
-        .build()
-    );
-    rules.push(
-      SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("AddToCart")
-        .setBackground("#FFEDD5")
-        .setFontColor("#C2410C")
-        .setRanges([pixelColRange])
-        .build()
-    );
-    rules.push(
-      SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("PageView")
-        .setBackground("#F3E8FF")
-        .setFontColor("#7E22CE")
-        .setRanges([pixelColRange])
-        .build()
-    );
-
-    sheet.setConditionalFormatRules(rules);
-  } catch (cErr) {}
-}
-
-/**
- * প্রতিটি অর্ডার রো (২৪টি কলাম) স্বয়ংক্রিয়ভাবে আকর্ষণীয় CRM লুকে রূপান্তর করা
- */
-function formatSingleRow_(sheet, rowIndex) {
-  try {
-    var numCols = HEADERS.length; // 24
-    sheet.setRowHeight(rowIndex, 32);
-
-    var rowRange = sheet.getRange(rowIndex, 1, 1, numCols);
-    rowRange
-      .setFontFamily("Segoe UI")
-      .setFontSize(9.5)
-      .setVerticalAlignment("middle")
-      .setBorder(
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        "#E2E8F0",
-        SpreadsheetApp.BorderStyle.SOLID
-      );
-
-    // অল্টারনেটিং ব্যাকগ্রাউন্ড (Zebra Striping)
-    if (rowIndex % 2 === 0) {
-      rowRange.setBackground("#FFFFFF");
-    } else {
-      rowRange.setBackground("#F8FAFC");
-    }
-
-    // কলাম ভিত্তিক এলাইনমেন্ট ও ফরম্যাটিং (বাম পাশ: অর্ডার তথ্য)
-    sheet.getRange(rowIndex, 1).setHorizontalAlignment("center").setFontWeight("bold").setFontColor("#1E293B"); // Order ID
-    sheet.getRange(rowIndex, 2).setHorizontalAlignment("center"); // Date & Time
-    sheet.getRange(rowIndex, 3).setHorizontalAlignment("left").setFontWeight("bold").setFontColor("#0F172A"); // Customer Name
-    sheet.getRange(rowIndex, 4).setHorizontalAlignment("center").setNumberFormat("@"); // Phone Number
-    sheet.getRange(rowIndex, 5).setHorizontalAlignment("center"); // District / Area
-    sheet.getRange(rowIndex, 6).setHorizontalAlignment("left").setWrap(true); // Full Address
-    sheet.getRange(rowIndex, 7).setHorizontalAlignment("left").setWrap(true); // Ordered Products
-    sheet.getRange(rowIndex, 8).setHorizontalAlignment("center").setFontWeight("bold"); // Items Qty
+  // 2. User Activity Tab
+  if (type === "activity" || type === "user_activity" || type === "track") {
+    var aSheet = getOrCreateSheet_(ss, TAB_ACTIVITY, HEADERS_ACTIVITY, "#1E1B4B", "#A5B4FC");
     
-    // Products Subtotal (সফট লাইট গ্রিন ব্যাকগ্রাউন্ড)
-    var subtotalCell = sheet.getRange(rowIndex, 9);
-    subtotalCell.setHorizontalAlignment("right").setBackground("#F0FDF4").setNumberFormat('"৳"#,##0');
-    
-    sheet.getRange(rowIndex, 10).setHorizontalAlignment("center"); // Delivery Method
-    sheet.getRange(rowIndex, 11).setHorizontalAlignment("right").setNumberFormat('"৳"#,##0'); // Delivery Charge
-
-    // Grand Total Bill (হাইলাইটেড সফট মিন্ট ব্যাকগ্রাউন্ড ও বোল্ড গ্রিন টেক্সট)
-    var grandTotalCell = sheet.getRange(rowIndex, 12);
-    grandTotalCell
-      .setHorizontalAlignment("right")
-      .setFontWeight("bold")
-      .setFontColor("#15803D")
-      .setBackground("#DCFCE7")
-      .setNumberFormat('"৳"#,##0');
-
-    sheet.getRange(rowIndex, 13).setHorizontalAlignment("left").setWrap(true); // Customer Note
-
-    // Order Status কলাম ও ড্রপডাউন
-    var statusCell = sheet.getRange(rowIndex, 14);
-    statusCell.setHorizontalAlignment("center").setFontWeight("bold");
-    var validationRule = SpreadsheetApp.newDataValidation()
-      .requireValueInList(["Completed", "Shipped", "Delivered", "Processing", "Pending", "New", "Cancelled"], true)
-      .setAllowInvalid(true)
-      .build();
-    statusCell.setDataValidation(validationRule);
-
-    // কলাম ভিত্তিক এলাইনমেন্ট ও ফরম্যাটিং (ডান পাশ: ফেসবুক পিক্সেল তথ্য)
-    sheet.getRange(rowIndex, 15).setHorizontalAlignment("left").setNumberFormat("@"); // fbclid
-    sheet.getRange(rowIndex, 16).setHorizontalAlignment("center").setNumberFormat("@"); // _fbp
-    sheet.getRange(rowIndex, 17).setHorizontalAlignment("center").setNumberFormat("@"); // _fbc
-    sheet.getRange(rowIndex, 18).setHorizontalAlignment("center").setFontWeight("bold"); // Pixel Event
-    sheet.getRange(rowIndex, 19).setHorizontalAlignment("left"); // Campaign Name
-    sheet.getRange(rowIndex, 20).setHorizontalAlignment("left"); // Ad Content
-    sheet.getRange(rowIndex, 21).setHorizontalAlignment("center"); // Traffic Source
-    sheet.getRange(rowIndex, 22).setHorizontalAlignment("center").setNumberFormat("@"); // Session ID
-    sheet.getRange(rowIndex, 23).setHorizontalAlignment("center"); // Time Spent
-    sheet.getRange(rowIndex, 24).setHorizontalAlignment("left"); // Landing Page URL
-  } catch (err) {}
-}
-
-/**
- * মোবাইল ফোনের জন্য বিশেষ ১-ক্লিক কুইক ভিউ ট্যাব (Mobile Optimized View)
- */
-function formatMobileViewSheetDesign(ss) {
-  try {
-    var tabName = "📱 Mobile View";
-    var mobSheet = ss.getSheetByName(tabName);
-    if (!mobSheet) {
-      mobSheet = ss.insertSheet(tabName);
-    }
-
-    var widths = [110, 135, 140, 130, 120, 115];
-    for (var i = 0; i < widths.length; i++) {
-      mobSheet.setColumnWidth(i + 1, widths[i]);
-    }
-
-    mobSheet.setFrozenRows(0);
-    mobSheet.setRowHeight(1, 34);
-    mobSheet.setRowHeight(2, 40);
-    mobSheet.setRowHeight(3, 32);
-
-    // রো ১: মোবাইল হেডার
-    var mBrand = mobSheet.getRange("A1:F1");
-    mBrand.merge()
-      .setBackground("#0F172A")
-      .setFontColor("#FFFFFF")
-      .setFontFamily("Segoe UI")
-      .setFontWeight("bold")
-      .setFontSize(11)
-      .setHorizontalAlignment("center")
-      .setVerticalAlignment("middle");
-    mobSheet.getRange("A1").setValue("📱 ASCHII SOLUTION • Mobile Quick Orders View");
-
-    // রো ২: মোবাইল KPI
-    var mKpi1 = mobSheet.getRange("A2:C2");
-    mKpi1.merge()
-      .setBackground("#EFF6FF")
-      .setFontFamily("Segoe UI")
-      .setHorizontalAlignment("center")
-      .setVerticalAlignment("middle")
-      .setBorder(true, true, true, true, false, false, "#BFDBFE", SpreadsheetApp.BorderStyle.SOLID);
-    mobSheet.getRange("A2").setFormula('="🛒 Total Orders: " & IFERROR(COUNTA(Orders!A5:A), 0)')
-      .setFontWeight("bold").setFontSize(10.5).setFontColor("#1E3A8A");
-
-    var mKpi2 = mobSheet.getRange("D2:F2");
-    mKpi2.merge()
-      .setBackground("#F0FDF4")
-      .setFontFamily("Segoe UI")
-      .setHorizontalAlignment("center")
-      .setVerticalAlignment("middle")
-      .setBorder(true, true, true, true, false, false, "#BBF7D0", SpreadsheetApp.BorderStyle.SOLID);
-    mobSheet.getRange("D2").setFormula('="💵 Revenue: ৳ " & TEXT(IFERROR(SUM(Orders!L5:L), 0), "#,##0")')
-      .setFontWeight("bold").setFontSize(10.5).setFontColor("#15803D");
-
-    // রো ৩: কলাম হেডার
-    var mobHeaders = ["Order ID", "Date & Time", "Customer Name", "Phone Number", "Total Bill", "Order Status"];
-    var mHeadRange = mobSheet.getRange("A3:F3");
-    mHeadRange.setValues([mobHeaders])
-      .setBackground("#F1F5F9")
-      .setFontColor("#1E293B")
-      .setFontFamily("Segoe UI")
-      .setFontWeight("bold")
-      .setFontSize(10)
-      .setHorizontalAlignment("center")
-      .setVerticalAlignment("middle")
-      .setBorder(true, true, true, true, true, true, "#CBD5E1", SpreadsheetApp.BorderStyle.SOLID);
-
-    // রো ৪: ডাটা ডায়নামিকালি অর্ডার শিট থেকে লিঙ্ক করা
-    mobSheet.getRange("A4").setFormula('=IFERROR(Orders!A5:A, "")');
-    mobSheet.getRange("B4").setFormula('=IFERROR(Orders!B5:B, "")');
-    mobSheet.getRange("C4").setFormula('=IFERROR(Orders!C5:C, "")');
-    mobSheet.getRange("D4").setFormula('=IFERROR(Orders!D5:D, "")');
-    mobSheet.getRange("E4").setFormula('=IFERROR(Orders!L5:L, "")');
-    mobSheet.getRange("F4").setFormula('=IFERROR(Orders!N5:N, "")');
-
-    mobSheet.setFrozenRows(3);
-  } catch (mErr) {}
-}
-
-/**
- * তারিখ অনুযায়ী ফিল্টার ও রিপোর্ট দেখার বিশেষ ট্যাব (Date-wise Report Tab)
- */
-function formatDateReportSheetDesign(ss) {
-  try {
-    var parentSs = ss || SpreadsheetApp.getActiveSpreadsheet() || getSheet_().getParent();
-    var tabName = "📅 Date Report";
-    var rSheet = parentSs.getSheetByName(tabName);
-    if (!rSheet) {
-      rSheet = parentSs.insertSheet(tabName);
-    }
-
-    var widths = [120, 145, 160, 130, 130, 125];
-    for (var i = 0; i < widths.length; i++) {
-      rSheet.setColumnWidth(i + 1, widths[i]);
-    }
-
-    rSheet.setFrozenRows(0);
-    rSheet.setRowHeight(1, 36);
-    rSheet.setRowHeight(2, 42);
-    rSheet.setRowHeight(3, 12);
-    rSheet.setRowHeight(4, 34);
-
-    // রো ১: ব্যানার
-    var titleRange = rSheet.getRange("A1:F1");
-    titleRange.merge()
-      .setBackground("#0F172A")
-      .setFontColor("#FFFFFF")
-      .setFontFamily("Segoe UI")
-      .setFontWeight("bold")
-      .setFontSize(11)
-      .setHorizontalAlignment("center")
-      .setVerticalAlignment("middle");
-    rSheet.getRange("A1").setValue("📅 ASCHII SOLUTION • Interactive Date-wise Order Report");
-
-    // রো ২: তারিখ বাছার ইন্টারেক্টিভ বক্স
-    rSheet.getRange("A2").setValue("📅 তারিখ বাছুন:")
-      .setFontFamily("Segoe UI").setFontWeight("bold").setHorizontalAlignment("right").setVerticalAlignment("middle").setFontColor("#334155");
-
-    var dateCell = rSheet.getRange("B2");
-    if (!dateCell.getValue()) {
-      dateCell.setValue(new Date());
-    }
-    dateCell.setNumberFormat("dd-mmm-yyyy")
-      .setBackground("#FEF3C7")
-      .setFontWeight("bold")
-      .setFontColor("#92400E")
-      .setHorizontalAlignment("center")
-      .setVerticalAlignment("middle");
-
-    rSheet.getRange("C2").setValue("মোট অর্ডার:")
-      .setFontFamily("Segoe UI").setFontWeight("bold").setHorizontalAlignment("right").setVerticalAlignment("middle").setFontColor("#334155");
-
-    rSheet.getRange("D2").setFormula('="🛒 " & IFERROR(COUNTA(A5:A), 0)')
-      .setBackground("#EFF6FF").setFontWeight("bold").setFontColor("#1E3A8A").setHorizontalAlignment("center").setVerticalAlignment("middle");
-
-    rSheet.getRange("E2").setValue("মোট বিক্রয়:")
-      .setFontFamily("Segoe UI").setFontWeight("bold").setHorizontalAlignment("right").setVerticalAlignment("middle").setFontColor("#334155");
-
-    rSheet.getRange("F2").setFormula('="৳ " & TEXT(IFERROR(SUM(E5:E), 0), "#,##0")')
-      .setBackground("#F0FDF4").setFontWeight("bold").setFontColor("#15803D").setHorizontalAlignment("center").setVerticalAlignment("middle");
-
-    rSheet.getRange("A2:F2").setBorder(true, true, true, true, true, true, "#CBD5E1", SpreadsheetApp.BorderStyle.SOLID);
-
-    // রো ৪: কলাম হেডার
-    var repHeaders = ["Order ID", "Date & Time", "Customer Name", "Phone Number", "Grand Total Bill", "Order Status"];
-    var headRange = rSheet.getRange("A4:F4");
-    headRange.setValues([repHeaders])
-      .setBackground("#F1F5F9")
-      .setFontColor("#1E293B")
-      .setFontFamily("Segoe UI")
-      .setFontWeight("bold")
-      .setFontSize(10)
-      .setHorizontalAlignment("center")
-      .setVerticalAlignment("middle")
-      .setBorder(true, true, true, true, true, true, "#CBD5E1", SpreadsheetApp.BorderStyle.SOLID);
-
-    // রো ৫: ডায়নামিক ফিল্টার ফর্মুলা
-    rSheet.getRange("A5").setFormula(
-      '=IFERROR(FILTER({Orders!A5:D, Orders!L5:L, Orders!N5:N}, ISNUMBER(SEARCH(TEXT(B2, "dd-mmm-yyyy"), Orders!B5:B))), "এই তারিখে কোনো অর্ডার পাওয়া যায়নি")'
-    );
-
-    rSheet.setFrozenRows(4);
-  } catch (err) {}
-}
-
-/* =========================================================================
-   তারিখ ভিত্তিক ফিল্টার ফাংশনসমূহ (DATE FILTER ACTIONS)
-   ========================================================================= */
-
-// আজকের অর্ডার ফিল্টার
-function filterOrdersToday() {
-  var sheet = getSheet_();
-  var filter = sheet.getFilter() || sheet.getRange(4, 1, Math.max(5, sheet.getLastRow()), HEADERS.length).createFilter();
-  var todayStr = Utilities.formatDate(new Date(), "Asia/Dhaka", "dd-MMM-yyyy");
-  var criteria = SpreadsheetApp.newFilterCriteria().whenTextContains(todayStr).build();
-  filter.setColumnFilterCriteria(2, criteria);
-  try {
-    SpreadsheetApp.getUi().alert("ফিল্টার সফল!", "আজকের (" + todayStr + ") সকল অর্ডার ফিল্টার করা হয়েছে।", SpreadsheetApp.getUi().ButtonSet.OK);
-  } catch (e) {}
-}
-
-// গতকালের অর্ডার ফিল্টার
-function filterOrdersYesterday() {
-  var sheet = getSheet_();
-  var filter = sheet.getFilter() || sheet.getRange(4, 1, Math.max(5, sheet.getLastRow()), HEADERS.length).createFilter();
-  var yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  var yestStr = Utilities.formatDate(yesterday, "Asia/Dhaka", "dd-MMM-yyyy");
-  var criteria = SpreadsheetApp.newFilterCriteria().whenTextContains(yestStr).build();
-  filter.setColumnFilterCriteria(2, criteria);
-  try {
-    SpreadsheetApp.getUi().alert("ফিল্টার সফল!", "গতকালের (" + yestStr + ") সকল অর্ডার ফিল্টার করা হয়েছে।", SpreadsheetApp.getUi().ButtonSet.OK);
-  } catch (e) {}
-}
-
-// চলতি মাসের অর্ডার ফিল্টার
-function filterOrdersThisMonth() {
-  var sheet = getSheet_();
-  var filter = sheet.getFilter() || sheet.getRange(4, 1, Math.max(5, sheet.getLastRow()), HEADERS.length).createFilter();
-  var monthStr = Utilities.formatDate(new Date(), "Asia/Dhaka", "MMM-yyyy");
-  var criteria = SpreadsheetApp.newFilterCriteria().whenTextContains(monthStr).build();
-  filter.setColumnFilterCriteria(2, criteria);
-  try {
-    SpreadsheetApp.getUi().alert("ফিল্টার সফল!", "চলতি মাসের (" + monthStr + ") সকল অর্ডার ফিল্টার করা হয়েছে।", SpreadsheetApp.getUi().ButtonSet.OK);
-  } catch (e) {}
-}
-
-// কাস্টম বা নির্দিষ্ট তারিখ ফিল্টার
-function filterOrdersCustomDate() {
-  try {
-    var ui = SpreadsheetApp.getUi();
-    var prompt = ui.prompt("📅 তারিখ ফিল্টার", "যে তারিখের অর্ডার দেখতে চান লিখুন (যেমন: 01-Nov-2026 বা Nov-2026):", ui.ButtonSet.OK_CANCEL);
-    if (prompt.getSelectedButton() === ui.Button.OK) {
-      var dateInput = prompt.getResponseText().trim();
-      if (dateInput) {
-        var sheet = getSheet_();
-        var filter = sheet.getFilter() || sheet.getRange(4, 1, Math.max(5, sheet.getLastRow()), HEADERS.length).createFilter();
-        var criteria = SpreadsheetApp.newFilterCriteria().whenTextContains(dateInput).build();
-        filter.setColumnFilterCriteria(2, criteria);
-      }
-    }
-  } catch (e) {}
-}
-
-// সব ফিল্টার ক্লিয়ার করে সব অর্ডার দেখানো
-function clearOrderFilter() {
-  var sheet = getSheet_();
-  var filter = sheet.getFilter();
-  if (filter) {
-    try {
-      filter.removeColumnFilterCriteria(2);
-      SpreadsheetApp.getUi().alert("ফিল্টার সরানো হয়েছে!", "এখন শিটের সব তারিখের অর্ডার দেখা যাচ্ছে।", SpreadsheetApp.getUi().ButtonSet.OK);
-    } catch (e) {}
-  }
-}
-
-/**
- * =========================================================================
- * ৮. সেশন ও ভিজিটর বিহেভিয়ার ট্র্যাকিং (SESSION & BEHAVIOR TRACKING)
- * =========================================================================
- */
-function handleTracking_(data) {
-  try {
-    var targetUrl = data.trackingSheetUrl || TRACKING_SPREADSHEET_ID || SPREADSHEET_ID;
-    var sheet = getTrackingSheet_(targetUrl);
-    var sessionId = clean_(data.sessionId || "Unknown", 80);
-    var now = Utilities.formatDate(new Date(), "Asia/Dhaka", "dd-MMM-yyyy hh:mm a");
-
-    var cache = CacheService.getScriptCache();
-    var cachedRow = cache.get("trk_row_" + sessionId);
-    var rowIndex = cachedRow ? parseInt(cachedRow, 10) : 0;
-
-    var stayTime = clean_(data.stayTime || "০ সেকেন্ড", 60);
-    var products = clean_(data.selectedProducts || "কোনো পণ্য সিলেক্ট করেনি", 300);
-    var ordered = clean_(data.ordered || "না (শুধু ভিজিট)", 60);
-    var pixelEvent = clean_(data.pixelEvent || "PageView", 50);
-    var phone = clean_(data.phone ? normPhone_(data.phone) : "দেয়নি", 25);
-    var fbclid = clean_(data.fbclid || "নাই", 160);
-    var fbp = clean_(data.fbp || "নাই", 100);
-    var fbc = clean_(data.fbc || "নাই", 120);
-    var campaign = clean_(data.campaign || "নাই", 120);
-    var adContent = clean_(data.adContent || "নাই", 120);
-    var device = clean_(data.device || "Unknown", 30);
-    var source = clean_(data.source || "Direct Visit", 120);
-    var pageUrl = clean_(data.pageUrl || "", 300);
-
-    // ১. ক্যাশে রো পাওয়া গেলে ওই রো-তেই আপডেট
-    if (rowIndex > 4 && rowIndex <= sheet.getLastRow()) {
-      var checkSess = sheet.getRange(rowIndex, 1).getValue();
-      if (checkSess === sessionId) {
-        sheet.getRange(rowIndex, 2).setValue(now);
-        sheet.getRange(rowIndex, 3).setValue(stayTime);
-        sheet.getRange(rowIndex, 4).setValue(products);
-        sheet.getRange(rowIndex, 5).setValue(ordered);
-        sheet.getRange(rowIndex, 6).setValue(pixelEvent);
-        if (data.phone) sheet.getRange(rowIndex, 7).setValue(phone);
-        if (data.fbclid && data.fbclid !== "নাই") sheet.getRange(rowIndex, 8).setValue(fbclid);
-        if (data.fbp && data.fbp !== "নাই") sheet.getRange(rowIndex, 9).setValue(fbp);
-        if (data.fbc && data.fbc !== "নাই") sheet.getRange(rowIndex, 10).setValue(fbc);
-        return json_({ success: true, updated: true, row: rowIndex });
-      }
-    }
-
-    // ২. শেষের ৩০টি সারিতে সেশন চেক
-    var lastRow = sheet.getLastRow();
-    var foundRow = 0;
+    // Check if visitor session exists to update visit count or append
+    var vId = clean_(data.visitorId || data.sessionId || "-", 60);
+    var updated = false;
+    var lastRow = aSheet.getLastRow();
     if (lastRow > 4) {
-      var checkCount = Math.min(30, lastRow - 4);
-      var startRow = lastRow - checkCount + 1;
-      var ids = sheet.getRange(startRow, 1, checkCount, 1).getValues();
-      for (var i = ids.length - 1; i >= 0; i--) {
-        if (ids[i][0] === sessionId) {
-          foundRow = startRow + i;
+      var vRange = aSheet.getRange(5, 1, Math.min(lastRow - 4, 300), 1).getValues();
+      for (var r = vRange.length - 1; r >= 0; r--) {
+        if (vRange[r][0] === vId) {
+          var targetRow = r + 5;
+          aSheet.getRange(targetRow, 6).setValue(data.visitCount || 1);
+          aSheet.getRange(targetRow, 7).setValue(clean_(data.sessionDuration || data.timeSpent || "0s", 50));
+          aSheet.getRange(targetRow, 8).setValue(clean_(data.buttonClicks || data.clicks || "0", 100));
+          aSheet.getRange(targetRow, 9).setValue(dateStr);
+          updated = true;
           break;
         }
       }
     }
 
-    if (foundRow > 0) {
-      sheet.getRange(foundRow, 2).setValue(now);
-      sheet.getRange(foundRow, 3).setValue(stayTime);
-      sheet.getRange(foundRow, 4).setValue(products);
-      sheet.getRange(foundRow, 5).setValue(ordered);
-      sheet.getRange(foundRow, 6).setValue(pixelEvent);
-      if (data.phone) sheet.getRange(foundRow, 7).setValue(phone);
-      if (data.fbclid && data.fbclid !== "নাই") sheet.getRange(foundRow, 8).setValue(fbclid);
-      if (data.fbp && data.fbp !== "নাই") sheet.getRange(foundRow, 9).setValue(fbp);
-      if (data.fbc && data.fbc !== "নাই") sheet.getRange(foundRow, 10).setValue(fbc);
-      cache.put("trk_row_" + sessionId, String(foundRow), 21600);
-      return json_({ success: true, updated: true, row: foundRow });
+    if (!updated) {
+      aSheet.appendRow([
+        vId,
+        clean_(data.pageUrl || "", 250),
+        clean_(data.referrer || "Direct", 150),
+        clean_(data.device || "Desktop", 40),
+        clean_(data.browser || "-", 40),
+        data.visitCount || 1,
+        clean_(data.sessionDuration || data.timeSpent || "0s", 50),
+        clean_(data.buttonClicks || data.clicks || "0", 100),
+        dateStr
+      ]);
+      formatLastRow_(aSheet);
     }
-
-    // ৩. নতুন ভিজিটর সেশন রো যোগ করা
-    sheet.appendRow([
-      sessionId,
-      now,
-      stayTime,
-      products,
-      ordered,
-      pixelEvent,
-      phone,
-      fbclid,
-      fbp,
-      fbc,
-      campaign,
-      adContent,
-      device,
-      source,
-      pageUrl
-    ]);
-
-    var newRow = sheet.getLastRow();
-    formatSingleTrackingRow_(sheet, newRow);
-    cache.put("trk_row_" + sessionId, String(newRow), 21600);
-
-    return json_({ success: true, created: true, row: newRow });
-  } catch (err) {
-    return json_({ success: false, error: err.message });
+    return { success: true, type: "activity", message: "Activity logged" };
   }
+
+  // 3. Order Data Tab (Default for Orders & Contact Inquiries)
+  var oSheet = getOrCreateSheet_(ss, TAB_ORDERS, HEADERS_ORDER, "#064E3B", "#34D399");
+
+  // Prevent duplicate submissions within cooldown
+  var phone = clean_(data.phone || "", 20);
+  if (phone) {
+    var cache = CacheService.getScriptCache();
+    var lastId = cache.get("sub_" + phone);
+    if (lastId && !data.bypassDuplicateCheck) {
+      return {
+        success: false,
+        duplicate: true,
+        orderId: lastId,
+        error: "Your submission was already received (ID: " + lastId + "). Please wait before submitting again."
+      };
+    }
+  }
+
+  var orderId = data.orderId || nextCustomOrderId_("ORD");
+  var custName = clean_(data.name || data.customerName || "Customer", 100);
+  var custEmail = clean_(data.email || "-", 100);
+  var custAddress = clean_(data.address || data.district || "-", 250);
+  var productOrService = clean_(data.product || data.service || data.itemsSummary || "General Inquiry", 200);
+  var price = Number(data.price || data.subtotal || 0);
+  var quantity = Number(data.quantity || data.totalQty || 1);
+  var totalAmount = Number(data.totalAmount || data.total || (price * quantity));
+  var orderStatus = data.status || "Pending";
+
+  oSheet.appendRow([
+    orderId,
+    custName,
+    "'" + phone,
+    custEmail,
+    custAddress,
+    productOrService,
+    price,
+    quantity,
+    totalAmount,
+    orderStatus,
+    dateStr
+  ]);
+  formatLastRow_(oSheet);
+
+  if (phone) {
+    try {
+      CacheService.getScriptCache().put("sub_" + phone, orderId, 300); // 5 min duplicate protection
+    } catch (e) {}
+  }
+
+  // Also auto-log Pixel Event for Purchase/Lead
+  try {
+    var pSheetAuto = getOrCreateSheet_(ss, TAB_PIXEL, HEADERS_PIXEL, "#0F172A", "#38BDF8");
+    pSheetAuto.appendRow([
+      data.email && !data.items ? "Lead / Contact" : "Purchase",
+      orderId,
+      clean_(data.pageUrl || "", 250),
+      productOrService + " (" + totalAmount + ")",
+      clean_(data.visitorId || data.sessionId || "-", 60),
+      clean_(data.device || "Desktop", 40),
+      clean_(data.browser || "-", 40),
+      clean_(data.utmSource || data.source || "-", 80),
+      clean_(data.utmCampaign || data.campaign || "-", 100),
+      dateStr
+    ]);
+    formatLastRow_(pSheetAuto);
+  } catch (pe) {}
+
+  // Automatically update Monthly Report
+  try {
+    updateMonthlyReportTab(ss);
+  } catch (me) {}
+
+  return {
+    success: true,
+    orderId: orderId,
+    total: totalAmount,
+    message: "Data successfully recorded in Google Sheets!"
+  };
 }
 
 /**
- * ট্র্যাকিং শিট কানেক্ট করা (Visitors Tab)
+ * Setup and Format all 4 Tabs with Modern Professional Styling
  */
-function getTrackingSheet_(customUrl) {
-  var ss;
-  var rawId = String(customUrl || TRACKING_SPREADSHEET_ID || SPREADSHEET_ID || "").trim();
+function setupAllFourTabs(optSs) {
+  var ss = optSs || getSpreadsheet_();
+  getOrCreateSheet_(ss, TAB_ORDERS, HEADERS_ORDER, "#064E3B", "#34D399");
+  getOrCreateSheet_(ss, TAB_PIXEL, HEADERS_PIXEL, "#0F172A", "#38BDF8");
+  getOrCreateSheet_(ss, TAB_ACTIVITY, HEADERS_ACTIVITY, "#1E1B4B", "#A5B4FC");
+  getOrCreateSheet_(ss, TAB_MONTHLY, HEADERS_MONTHLY, "#1E293B", "#F59E0B");
+  updateMonthlyReportTab(ss);
+  SpreadsheetApp.flush();
+  return "All 4 Tabs Formatted Successfully!";
+}
 
-  if (rawId.length > 0) {
-    var urlMatch = rawId.match(/\/d\/([a-zA-Z0-9-_]+)/);
-    var cleanId = urlMatch ? urlMatch[1] : rawId;
-    try {
-      ss = SpreadsheetApp.openById(cleanId);
-    } catch (e) {
-      ss = SpreadsheetApp.getActiveSpreadsheet();
-    }
-  } else {
-    ss = SpreadsheetApp.getActiveSpreadsheet();
-  }
+/**
+ * Creates or formats a Tab with Header & Styling
+ */
+function getOrCreateSheet_(ss, sheetName, headers, bannerBg, accentColor) {
+  var sheet = ss.getSheetByName(sheetName);
+  var numCols = headers.length;
 
-  if (!ss) {
-    throw new Error("গুগল শিট খুঁজে পাওয়া যায়নি।");
-  }
-
-  var tabName = TRACKING_SHEET_NAME || "Visitors";
-  var sheet = ss.getSheetByName(tabName);
   if (!sheet) {
-    sheet = ss.insertSheet(tabName);
+    sheet = ss.insertSheet(sheetName);
   }
 
-  if (sheet.getLastRow() === 0) {
-    formatTrackingSheetDesign(sheet);
+  // Check if header already styled
+  var needsFormat = false;
+  if (sheet.getLastRow() < 4) {
+    needsFormat = true;
   } else {
-    try {
-      var needsTrkRedesign = false;
-      if (sheet.getLastRow() < 4) {
-        needsTrkRedesign = true;
-      } else {
-        var row4 = sheet.getRange(4, 1, 1, Math.min(sheet.getLastColumn(), 3)).getValues()[0];
-        if (String(row4[0]).indexOf("Session ID") === -1) {
-          needsTrkRedesign = true;
+    var val = sheet.getRange(4, 1).getValue();
+    if (val !== headers[0]) needsFormat = true;
+  }
+
+  if (needsFormat) {
+    // Preserve existing rows if any
+    var existing = [];
+    var lastRow = sheet.getLastRow();
+    if (lastRow > 0) {
+      var raw = sheet.getRange(1, 1, lastRow, Math.max(numCols, sheet.getLastColumn())).getValues();
+      for (var r = 0; r < raw.length; r++) {
+        var row = raw[r];
+        if (row[0] && String(row[0]).indexOf("ASCHII") === -1 && String(row[0]).indexOf(headers[0]) === -1) {
+          existing.push(row.slice(0, numCols));
         }
       }
-      if (needsTrkRedesign) {
-        formatTrackingSheetDesign(sheet);
+    }
+
+    try { var f = sheet.getFilter(); if (f) f.remove(); } catch (e) {}
+    sheet.setFrozenRows(0);
+    sheet.clear();
+
+    // 1. Top Branding Header (Row 1)
+    sheet.setRowHeight(1, 36);
+    sheet.getRange(1, 1, 1, numCols).merge()
+      .setBackground(bannerBg)
+      .setFontColor("#FFFFFF")
+      .setFontFamily("Segoe UI")
+      .setFontWeight("bold")
+      .setFontSize(11)
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle")
+      .setValue("🌐 ASCHII CRM • " + sheetName + "  (Auto-Synchronized)");
+
+    // 2. Summary KPI row (Row 2 & 3)
+    sheet.setRowHeight(2, 28);
+    sheet.setRowHeight(3, 20);
+    sheet.getRange(2, 1, 1, numCols).merge()
+      .setBackground("#F8FAFC")
+      .setFontColor("#334155")
+      .setFontFamily("Segoe UI")
+      .setFontWeight("bold")
+      .setFontSize(10)
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle")
+      .setValue("Real-time Tracking & Business Records  |  Updated: " + Utilities.formatDate(new Date(), "Asia/Dhaka", "dd-MMM-yyyy hh:mm a"));
+
+    // 3. Table Column Headers (Row 4)
+    sheet.setRowHeight(4, 34);
+    var hRange = sheet.getRange(4, 1, 1, numCols);
+    hRange.setValues([headers])
+      .setBackground("#F1F5F9")
+      .setFontColor("#0F172A")
+      .setFontFamily("Segoe UI")
+      .setFontWeight("bold")
+      .setFontSize(10)
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle")
+      .setBorder(true, true, true, true, true, true, "#CBD5E1", SpreadsheetApp.BorderStyle.SOLID);
+
+    // Set Column Widths
+    for (var c = 1; c <= numCols; c++) {
+      var w = 130;
+      if (headers[c - 1].indexOf("Address") > -1 || headers[c - 1].indexOf("URL") > -1) w = 220;
+      if (headers[c - 1].indexOf("Product") > -1 || headers[c - 1].indexOf("Service") > -1) w = 180;
+      if (headers[c - 1].indexOf("ID") > -1) w = 140;
+      if (headers[c - 1].indexOf("Clicks") > -1) w = 160;
+      sheet.setColumnWidth(c, w);
+    }
+
+    if (existing.length > 0) {
+      sheet.getRange(5, 1, existing.length, numCols).setValues(existing);
+      for (var er = 5; er < 5 + existing.length; er++) {
+        formatRowStyling_(sheet, er, numCols);
       }
-    } catch (hErr) {}
+    }
+
+    sheet.setFrozenRows(4);
+    try {
+      sheet.getRange(4, 1, Math.max(5, sheet.getLastRow()), numCols).createFilter();
+    } catch (fe) {}
   }
 
   return sheet;
 }
 
 /**
- * ট্র্যাকিং শিটের প্রফেশনাল ডিজাইন (Visitors Tab)
+ * Format newly appended row with zebra striping and alignment
  */
-function formatTrackingSheetDesign(optSheet) {
-  var sheet = optSheet || getTrackingSheet_();
-  var numCols = TRACKING_HEADERS.length;
-  var lastRow = sheet.getLastRow();
-
-  var existingVisitors = [];
-  var isAlreadyStyled = false;
-
-  if (lastRow >= 4) {
-    try {
-      var row4 = sheet.getRange(4, 1, 1, Math.min(sheet.getLastColumn(), 3)).getValues()[0];
-      if (String(row4[0]).indexOf("Session ID") > -1) {
-        isAlreadyStyled = true;
-      }
-    } catch (e) {}
-  }
-
-  if (!isAlreadyStyled && lastRow > 0) {
-    var checkRow1 = sheet.getRange(1, 1, 1, Math.min(sheet.getLastColumn(), 3)).getValues()[0];
-    var startRow = (String(checkRow1[0]).indexOf("Session ID") > -1) ? 2 : 1;
-    if (lastRow >= startRow) {
-      var raw = sheet.getRange(startRow, 1, lastRow - startRow + 1, sheet.getLastColumn()).getValues();
-      for (var r = 0; r < raw.length; r++) {
-        var rowData = raw[r];
-        if (rowData[0]) {
-          var padded = [];
-          for (var c = 0; c < numCols; c++) {
-            padded.push(c < rowData.length ? rowData[c] : "-");
-          }
-          existingVisitors.push(padded);
-        }
-      }
-    }
-    sheet.clear();
-  }
-
-  // কলামের প্রস্থ
-  var widths = [140, 165, 135, 240, 150, 130, 140, 210, 170, 180, 160, 160, 100, 150, 240];
-  for (var i = 0; i < widths.length; i++) {
-    sheet.setColumnWidth(i + 1, widths[i]);
-  }
-
-  try {
-    var curFilter = sheet.getFilter();
-    if (curFilter) curFilter.remove();
-  } catch (fe) {}
-
-  sheet.setFrozenRows(0);
-
-  // রো ১ ও ২: শীর্ষ ব্যানার ও KPI
-  sheet.setRowHeight(1, 40);
-  sheet.setRowHeight(2, 34);
-
-  var brand = sheet.getRange("A1:D2");
-  brand.merge()
-    .setBackground("#0F172A")
-    .setFontColor("#FFFFFF")
-    .setFontFamily("Segoe UI")
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setWrap(true);
-  sheet.getRange("A1").setValue("🌐 ASCHII SOLUTION • Real-time Visitors Tracker\nLive Facebook Pixel & Visitor Traffic Dashboard");
-  sheet.getRange("A1").setFontWeight("bold").setFontSize(11);
-
-  var k1 = sheet.getRange("E1:G2");
-  k1.merge()
-    .setBackground("#EFF6FF")
-    .setFontFamily("Segoe UI")
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, false, false, "#BFDBFE", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange("E1").setFormula('="👥 Total Visitors" & CHAR(10) & IFERROR(COUNTA(A5:A), 0)')
-    .setFontWeight("bold").setFontSize(13).setFontColor("#1E3A8A");
-
-  var k2 = sheet.getRange("H1:J2");
-  k2.merge()
-    .setBackground("#F0FDF4")
-    .setFontFamily("Segoe UI")
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, false, false, "#BBF7D0", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange("H1").setFormula('="🎯 Purchases" & CHAR(10) & IFERROR(COUNTIF(E5:E, "*হ্যাঁ*") + COUNTIF(F5:F, "Purchase"), 0)')
-    .setFontWeight("bold").setFontSize(13).setFontColor("#15803D");
-
-  var k3 = sheet.getRange("K1:O2");
-  k3.merge()
-    .setBackground("#F5F3FF")
-    .setFontFamily("Segoe UI")
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, false, false, "#DDD6FE", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange("K1").setFormula('="📅 Live Sync" & CHAR(10) & TEXT(NOW(), "mmm dd, yyyy hh:mm AM/PM")')
-    .setFontWeight("bold").setFontSize(11).setFontColor("#6D28D9");
-
-  // রো ৩: সেকশন ব্যানার
-  sheet.setRowHeight(3, 34);
-  var secBanner = sheet.getRange(3, 1, 1, numCols);
-  secBanner.merge()
-    .setBackground("#312E81")
-    .setFontColor("#FFFFFF")
-    .setFontFamily("Segoe UI")
-    .setFontWeight("bold")
-    .setFontSize(11)
-    .setHorizontalAlignment("left")
-    .setVerticalAlignment("middle");
-  sheet.getRange("A3").setValue("  </> Live Visitor Sessions & Facebook Pixel Events Data (fbclid, _fbp, _fbc & UTM)");
-
-  // রো ৪: হেডার
-  sheet.setRowHeight(4, 38);
-  var headerRange = sheet.getRange(4, 1, 1, numCols);
-  headerRange.setValues([TRACKING_HEADERS])
-    .setBackground("#EDE9FE")
-    .setFontColor("#312E81")
-    .setFontFamily("Segoe UI")
-    .setFontWeight("bold")
-    .setFontSize(10.5)
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setBorder(true, true, true, true, true, true, "#C7D2FE", SpreadsheetApp.BorderStyle.SOLID);
-
-  if (existingVisitors.length > 0) {
-    sheet.getRange(5, 1, existingVisitors.length, numCols).setValues(existingVisitors);
-  }
-
-  sheet.setFrozenRows(4);
-
-  var finalLast = Math.max(5, sheet.getLastRow());
-  try {
-    sheet.getRange(4, 1, finalLast, numCols).createFilter();
-  } catch (fe) {}
-
-  if (finalLast >= 5) {
-    for (var r = 5; r <= finalLast; r++) {
-      formatSingleTrackingRow_(sheet, r);
-    }
-  }
-
-  return "Visitors ট্র্যাকিং শিট ডিজাইন সফলভাবে সম্পন্ন হয়েছে!";
+function formatLastRow_(sheet) {
+  var r = sheet.getLastRow();
+  var numCols = sheet.getLastColumn();
+  formatRowStyling_(sheet, r, numCols);
 }
 
-/**
- * প্রতিটি ভিজিটর ট্র্যাকিং রো ডিজাইন
- */
-function formatSingleTrackingRow_(sheet, rowIndex) {
+function formatRowStyling_(sheet, rowIndex, numCols) {
   try {
-    var numCols = TRACKING_HEADERS.length;
-    sheet.setRowHeight(rowIndex, 33);
-
-    var rowRange = sheet.getRange(rowIndex, 1, 1, numCols);
-    rowRange
-      .setFontFamily("Segoe UI")
-      .setFontSize(10)
+    sheet.setRowHeight(rowIndex, 30);
+    var range = sheet.getRange(rowIndex, 1, 1, numCols);
+    range.setFontFamily("Segoe UI")
+      .setFontSize(9.5)
       .setVerticalAlignment("middle")
       .setBorder(true, true, true, true, true, true, "#E2E8F0", SpreadsheetApp.BorderStyle.SOLID);
 
-    if (rowIndex % 2 === 0) rowRange.setBackground("#FFFFFF");
-    else rowRange.setBackground("#F8FAFC");
-
-    sheet.getRange(rowIndex, 1).setHorizontalAlignment("center").setFontWeight("bold").setFontColor("#1E293B").setNumberFormat("@");
-    sheet.getRange(rowIndex, 2).setHorizontalAlignment("center");
-    sheet.getRange(rowIndex, 3).setHorizontalAlignment("center");
-    sheet.getRange(rowIndex, 4).setHorizontalAlignment("left").setWrap(true);
-    sheet.getRange(rowIndex, 5).setHorizontalAlignment("center").setFontWeight("bold");
-    sheet.getRange(rowIndex, 6).setHorizontalAlignment("center").setFontWeight("bold");
-    sheet.getRange(rowIndex, 7).setHorizontalAlignment("center").setNumberFormat("@");
-    sheet.getRange(rowIndex, 8).setHorizontalAlignment("left").setNumberFormat("@");
-    sheet.getRange(rowIndex, 9).setHorizontalAlignment("center").setNumberFormat("@");
-    sheet.getRange(rowIndex, 10).setHorizontalAlignment("center").setNumberFormat("@");
-    sheet.getRange(rowIndex, 11).setHorizontalAlignment("left");
-    sheet.getRange(rowIndex, 12).setHorizontalAlignment("left");
-    sheet.getRange(rowIndex, 13).setHorizontalAlignment("center");
-    sheet.getRange(rowIndex, 14).setHorizontalAlignment("center");
-    sheet.getRange(rowIndex, 15).setHorizontalAlignment("left");
-  } catch (err) {}
+    range.setBackground(rowIndex % 2 === 0 ? "#FFFFFF" : "#F8FAFC");
+    sheet.getRange(rowIndex, 1).setHorizontalAlignment("center").setFontWeight("bold");
+    sheet.getRange(rowIndex, numCols).setHorizontalAlignment("center");
+  } catch (e) {}
 }
 
 /**
- * সহায়ক ফাংশন: স্ক্রিপ্ট লগ
+ * Generate Monthly Report Tab aggregates
  */
-function log_(msg) {
-  Logger.log(msg);
+function updateMonthlyReportTab(optSs) {
+  var ss = optSs || getSpreadsheet_();
+  var orderSheet = ss.getSheetByName(TAB_ORDERS);
+  var activitySheet = ss.getSheetByName(TAB_ACTIVITY);
+  var monthlySheet = getOrCreateSheet_(ss, TAB_MONTHLY, HEADERS_MONTHLY, "#1E293B", "#F59E0B");
+
+  var orders = [];
+  if (orderSheet && orderSheet.getLastRow() >= 5) {
+    orders = orderSheet.getRange(5, 1, orderSheet.getLastRow() - 4, HEADERS_ORDER.length).getValues();
+  }
+
+  var visitorsCount = 0;
+  if (activitySheet && activitySheet.getLastRow() >= 5) {
+    visitorsCount = activitySheet.getLastRow() - 4;
+  }
+
+  // Aggregate by Date (dd-MMM-yyyy)
+  var map = {};
+  for (var i = 0; i < orders.length; i++) {
+    var row = orders[i];
+    var rawDate = String(row[10] || "");
+    var day = rawDate.split(" ")[0] || Utilities.formatDate(new Date(), "Asia/Dhaka", "dd-MMM-yyyy");
+    if (!map[day]) {
+      map[day] = { orders: 0, contacts: 0, revenue: 0, completed: 0, pending: 0 };
+    }
+    var total = Number(row[8] || 0);
+    var status = String(row[9] || "Pending").toLowerCase();
+    var email = String(row[3] || "");
+
+    if (email && email !== "-" && !total) {
+      map[day].contacts++;
+    } else {
+      map[day].orders++;
+      map[day].revenue += total;
+    }
+
+    if (status.indexOf("complete") > -1 || status.indexOf("deliver") > -1) {
+      map[day].completed++;
+    } else {
+      map[day].pending++;
+    }
+  }
+
+  var rows = [];
+  var days = Object.keys(map).sort().reverse();
+  for (var d = 0; d < days.length; d++) {
+    var k = days[d];
+    rows.push([
+      k,
+      map[k].orders,
+      map[k].contacts,
+      visitorsCount,
+      map[k].revenue,
+      map[k].completed,
+      map[k].pending
+    ]);
+  }
+
+  if (rows.length > 0) {
+    // Clear old data rows in Monthly Report
+    var currentLast = monthlySheet.getLastRow();
+    if (currentLast >= 5) {
+      monthlySheet.getRange(5, 1, currentLast - 4, HEADERS_MONTHLY.length).clearContent();
+    }
+    monthlySheet.getRange(5, 1, rows.length, HEADERS_MONTHLY.length).setValues(rows);
+    for (var mr = 5; mr < 5 + rows.length; mr++) {
+      formatRowStyling_(monthlySheet, mr, HEADERS_MONTHLY.length);
+    }
+  }
 }
 
 /**
- * স্বয়ংক্রিয় অনন্য অর্ডার আইডি তৈরি (যেমন: HN-261026-0001)
+ * Filter Orders on UI by Date
  */
-function nextOrderId_(sheet) {
-  var tz = "Asia/Dhaka";
-  var day = Utilities.formatDate(new Date(), tz, "yyMMdd");
+function filterTodayOrders() {
+  var today = Utilities.formatDate(new Date(), "Asia/Dhaka", "dd-MMM-yyyy");
+  applyOrderDateFilter_(today);
+}
+
+function filterYesterdayOrders() {
+  var d = new Date();
+  d.setDate(d.getDate() - 1);
+  var yest = Utilities.formatDate(d, "Asia/Dhaka", "dd-MMM-yyyy");
+  applyOrderDateFilter_(yest);
+}
+
+function filterThisMonthOrders() {
+  var m = Utilities.formatDate(new Date(), "Asia/Dhaka", "MMM-yyyy");
+  applyOrderDateFilter_(m);
+}
+
+function clearOrderFilters() {
+  var sheet = getSpreadsheet_().getSheetByName(TAB_ORDERS);
+  if (sheet) {
+    var f = sheet.getFilter();
+    if (f) f.remove();
+    var lastRow = Math.max(5, sheet.getLastRow());
+    sheet.getRange(4, 1, lastRow, HEADERS_ORDER.length).createFilter();
+  }
+}
+
+function applyOrderDateFilter_(dateSubstr) {
+  var sheet = getSpreadsheet_().getSheetByName(TAB_ORDERS);
+  if (!sheet) return;
+  var f = sheet.getFilter();
+  if (f) f.remove();
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 5) return;
+  var filter = sheet.getRange(4, 1, lastRow, HEADERS_ORDER.length).createFilter();
+  var criteria = SpreadsheetApp.newFilterCriteria()
+    .whenTextContains(dateSubstr)
+    .build();
+  filter.setColumnFilterCriteria(11, criteria); // Column 11 is Date & Time
+}
+
+/**
+ * Calculate Summary stats for API
+ */
+function calculateSummaryStats_(ss) {
+  var oSheet = ss.getSheetByName(TAB_ORDERS);
+  var aSheet = ss.getSheetByName(TAB_ACTIVITY);
+  var totalOrders = 0;
+  var totalRevenue = 0;
+  var completedOrders = 0;
+  var pendingOrders = 0;
+
+  if (oSheet && oSheet.getLastRow() >= 5) {
+    var data = oSheet.getRange(5, 1, oSheet.getLastRow() - 4, HEADERS_ORDER.length).getValues();
+    totalOrders = data.length;
+    for (var i = 0; i < data.length; i++) {
+      totalRevenue += Number(data[i][8] || 0);
+      var st = String(data[i][9] || "").toLowerCase();
+      if (st.indexOf("complete") > -1 || st.indexOf("deliver") > -1) completedOrders++;
+      else pendingOrders++;
+    }
+  }
+
+  var visitors = 0;
+  if (aSheet && aSheet.getLastRow() >= 5) {
+    visitors = aSheet.getLastRow() - 4;
+  }
+
+  return {
+    totalOrders: totalOrders,
+    totalRevenue: totalRevenue,
+    completedOrders: completedOrders,
+    pendingOrders: pendingOrders,
+    totalVisitors: visitors
+  };
+}
+
+/**
+ * Helper to get active or linked Spreadsheet
+ */
+function getSpreadsheet_(optUrl) {
+  var url = optUrl || (typeof SPREADSHEET_ID !== "undefined" ? SPREADSHEET_ID : "");
+  if (url && url.length > 5) {
+    var match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    var id = match ? match[1] : url;
+    try {
+      return SpreadsheetApp.openById(id);
+    } catch (e) {}
+  }
+  return SpreadsheetApp.getActiveSpreadsheet();
+}
+
+function nextCustomOrderId_(prefix) {
+  var day = Utilities.formatDate(new Date(), "Asia/Dhaka", "yyMMdd");
   var props = PropertiesService.getScriptProperties();
   var key = "seq_" + day;
   var n = parseInt(props.getProperty(key) || "0", 10) + 1;
   props.setProperty(key, String(n));
-  return "HN-" + day + "-" + ("000" + n).slice(-4);
+  return prefix + "-" + day + "-" + ("000" + n).slice(-4);
 }
 
-/**
- * ইনপুট টেক্সট ক্লিন করা
- */
 function clean_(val, maxLen) {
   if (val === null || val === undefined) return "";
-  var s = val.toString().trim();
-  s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
-  if (maxLen && s.length > maxLen) {
-    s = s.substring(0, maxLen);
-  }
-  return s;
+  var s = String(val).trim().replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
+  return maxLen && s.length > maxLen ? s.substring(0, maxLen) : s;
 }
 
-/**
- * JSON আউটপুট রিটার্ন
- */
-function json_(obj) {
+function jsonResponse_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(
     ContentService.MimeType.JSON
   );
-}
-
-/**
- * টেস্ট ফাংশন (Apps Script থেকে সরাসরি রান করতে পারেন)
- */
-function testOrder() {
-  var fakeEvent = {
-    postData: {
-      contents: JSON.stringify({
-        name: "টেস্ট কাস্টমার",
-        phone: "01700000000",
-        district: "ঢাকা",
-        address: "মিরপুর-১০, ঢাকা",
-        note: "এটি একটি টেস্ট অর্ডার",
-        shippingId: "dhaka",
-        items: [
-          { id: "m1000", qty: 1 },
-          { id: "hn1000", qty: 1 },
-        ],
-        fbclid: "fbclid_test_123456789",
-        fbp: "fb.1.1698480000.1234",
-        fbc: "fb.1.1698480500.5678",
-        pixelEvent: "Purchase",
-        campaign: "Winter Honey Campaign",
-        adContent: "Video Ad - 1",
-        source: "Facebook Ads",
-        sessionId: "V-TEST-001",
-        timeSpent: "২ মিনিট ১৫ সেকেন্ড",
-        pageUrl: "https://example.com"
-      }),
-    },
-  };
-  var res = doPost(fakeEvent);
-  Logger.log(res.getContent());
 }
